@@ -14,5 +14,5 @@ void main() {
     ),
   );
   
-  runApp(WayPointApp());
+  runApp(WaypointApp());
 }
