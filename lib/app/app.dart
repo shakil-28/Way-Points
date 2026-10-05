@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../core/config/app_config.dart';
 import '../core/theme/app_theme.dart';
+import '../features/auth/controllers/auth_controller.dart';
 import '../features/discovery/controllers/discovery_controller.dart';
 import '../features/history/controllers/history_controller.dart';
 import '../features/location/controllers/location_controller.dart';
@@ -22,6 +23,7 @@ class WaypointApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthController()),
         ChangeNotifierProvider(create: (_) => LocationController()),
         ChangeNotifierProvider(create: (_) => MapController()),
         ChangeNotifierProvider(create: (_) => PlaceSearchController()),

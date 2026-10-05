@@ -14,6 +14,13 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSpeedUnit(SpeedUnit unit) {
+    _settings = _settings.copyWith(
+      speedUnit: unit,
+    );
+    notifyListeners();
+  }
+
   void setAvoidTolls(bool value) {
     _settings = _settings.copyWith(
       avoidTolls: value,

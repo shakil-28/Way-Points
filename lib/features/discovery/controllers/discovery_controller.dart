@@ -54,7 +54,7 @@ class DiscoveryController extends ChangeNotifier {
     ),
   ];
 
-  List<PoiModel> _pois = List.from(curatedPois);
+  final List<PoiModel> _pois = List.from(curatedPois);
   PoiModel _activePoi = curatedPois.first;
 
   List<PoiModel> get pois => _pois;

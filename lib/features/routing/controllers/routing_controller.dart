@@ -45,7 +45,7 @@ class RoutingController extends ChangeNotifier {
     ),
   ];
 
-  List<RouteModel> _routes = List.from(predefinedRoutes);
+  final List<RouteModel> _routes = List.from(predefinedRoutes);
   RouteModel _selectedRoute = predefinedRoutes.first;
 
   List<RouteModel> get routes => _routes;

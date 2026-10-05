@@ -39,23 +39,32 @@ class HistoryController extends ChangeNotifier {
       scenicStopsVisited: 2,
     ),
     SearchHistoryModel(
-      id: 'trip_2',
-      title: 'Padma Bridge South Bypass',
-      origin: 'Dhanmondi 27, Dhaka',
-      destination: 'Mawa Fish Ghat & Overlook',
+      id: 'trip_3',
+      title: 'Sonargaon Heritage Lane',
+      origin: 'Banani 11, Dhaka',
+      destination: 'Panam Nagar Ancient City',
 
-      originLat: 23.7461,
-      originLng: 90.3742,
-      destinationLat: 23.4707,
-      destinationLng: 90.2676,
+      originLat: 23.7955,
+      originLng: 90.4008,
+      destinationLat: 23.6492,
+      destinationLng: 90.5986,
 
-      distanceKm: 42.0,
-      durationMinutes: 48,
-      timestamp: DateTime.now().subtract(const Duration(days: 5)),
-      category: 'Waterfront',
+      distanceKm: 28.0,
+      durationMinutes: 36,
+      timestamp: DateTime.now().subtract(const Duration(days: 8)),
+      category: 'Heritage',
       scenicStopsVisited: 2,
     ),
   ];
+
+  bool _showClearModal = false;
+
+  bool get showClearModal => _showClearModal;
+
+  void toggleClearModal(bool show) {
+    _showClearModal = show;
+    notifyListeners();
+  }
 
   final List<SearchHistoryModel> _trips = List.from(initialTrips);
 

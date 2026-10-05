@@ -4,6 +4,11 @@ enum ThemePreference {
   dark,
 }
 
+enum SpeedUnit {
+  kmh,
+  mph,
+}
+
 enum AvoidRoadOption {
   tolls,
   ferries,
@@ -13,6 +18,7 @@ enum AvoidRoadOption {
 /// User navigation and display preferences
 class SettingsModel {
   final ThemePreference themePreference;
+  final SpeedUnit speedUnit;
   final bool avoidTolls;
   final bool avoidFerries;
   final bool autoRerouteScenic;
@@ -23,6 +29,7 @@ class SettingsModel {
 
   const SettingsModel({
     this.themePreference = ThemePreference.dark,
+    this.speedUnit = SpeedUnit.kmh,
     this.avoidTolls = false,
     this.avoidFerries = false,
     this.autoRerouteScenic = true,
@@ -34,6 +41,7 @@ class SettingsModel {
 
   SettingsModel copyWith({
     ThemePreference? themePreference,
+    SpeedUnit? speedUnit,
     bool? avoidTolls,
     bool? avoidFerries,
     bool? autoRerouteScenic,
@@ -44,6 +52,7 @@ class SettingsModel {
   }) {
     return SettingsModel(
       themePreference: themePreference ?? this.themePreference,
+      speedUnit: speedUnit ?? this.speedUnit,
       avoidTolls: avoidTolls ?? this.avoidTolls,
       avoidFerries: avoidFerries ?? this.avoidFerries,
       autoRerouteScenic: autoRerouteScenic ?? this.autoRerouteScenic,

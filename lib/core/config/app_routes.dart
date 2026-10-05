@@ -1,6 +1,9 @@
 /// App route path constants for GoRouter
 class AppRoutes {
   static const String initial = '/';
+  static const String login = '/login';
+  static const String signUp = '/signup';
+  static const String profileSetup = '/profile-setup';
   static const String map = '/map';
   static const String search = '/search';
   static const String routePreview = '/route-preview';

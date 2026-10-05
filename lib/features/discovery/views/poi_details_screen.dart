@@ -22,7 +22,9 @@ class PoiDetailsScreen extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      body: CustomScrollView(
+      body: SafeArea(
+        bottom: false,
+        child: CustomScrollView(
         slivers: [
           // Hero Image AppBar
           SliverAppBar(
@@ -50,9 +52,9 @@ class PoiDetailsScreen extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withOpacity(0.3),
+                          Colors.black.withValues(alpha: 0.3),
                           Colors.transparent,
-                          Colors.black.withOpacity(0.85),
+                          Colors.black.withValues(alpha: 0.85),
                         ],
                       ),
                     ),
@@ -73,9 +75,9 @@ class PoiDetailsScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withOpacity(0.12),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.accentNeon.withOpacity(0.3)),
+                      border: Border.all(color: AppTheme.accentNeon.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -85,13 +87,13 @@ class PoiDetailsScreen extends StatelessWidget {
                           value: '+${activePoi.detourMinutes} min',
                           label: 'CORRIDOR DETOUR',
                         ),
-                        Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.3)),
+                        Container(width: 1, height: 36, color: Colors.grey.withValues(alpha: 0.3)),
                         _buildMetric(
                           icon: Symbols.distance,
                           value: '${activePoi.detourDistanceKm} km',
                           label: 'DEVIATION',
                         ),
-                        Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.3)),
+                        Container(width: 1, height: 36, color: Colors.grey.withValues(alpha: 0.3)),
                         _buildMetric(
                           icon: Symbols.star,
                           value: '${activePoi.rating}',
@@ -141,11 +143,14 @@ class PoiDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   // Best Time to Visit
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Symbols.sunny, color: Colors.amber),
-                    title: const Text('Recommended Visit Timing', style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(activePoi.bestTimeToVisit),
+                  Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Symbols.sunny, color: Colors.amber),
+                      title: const Text('Recommended Visit Timing', style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(activePoi.bestTimeToVisit),
+                    ),
                   ),
 
                   const SizedBox(height: 10),
@@ -198,6 +203,7 @@ class PoiDetailsScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

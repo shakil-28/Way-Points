@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -91,7 +91,7 @@ class _BengalMapPainter extends CustomPainter {
 
     // Subtle grid coordinates
     final gridPaint = Paint()
-      ..color = (isDark ? Colors.white : Colors.black).withOpacity(0.04)
+      ..color = (isDark ? Colors.white : Colors.black).withValues(alpha: 0.04)
       ..strokeWidth = 1.0;
 
     const gridSize = 40.0;
@@ -131,7 +131,7 @@ class _BengalMapPainter extends CustomPainter {
 
     // Route Outer Glow
     final glowPaint = Paint()
-      ..color = AppTheme.accentNeon.withOpacity(isDark ? 0.35 : 0.25)
+      ..color = AppTheme.accentNeon.withValues(alpha: isDark ? 0.35 : 0.25)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 12.0
       ..strokeCap = StrokeCap.round;
@@ -151,7 +151,7 @@ class _BengalMapPainter extends CustomPainter {
     // Radar pulse wave
     final waveRadius = 14.0 + (pulseVal * 32.0);
     final wavePaint = Paint()
-      ..color = AppTheme.accentNeon.withOpacity((1.0 - pulseVal).clamp(0.0, 1.0) * 0.6)
+      ..color = AppTheme.accentNeon.withValues(alpha: (1.0 - pulseVal).clamp(0.0, 1.0) * 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
     canvas.drawCircle(vehiclePos, waveRadius, wavePaint);

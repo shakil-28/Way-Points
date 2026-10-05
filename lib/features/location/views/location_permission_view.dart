@@ -33,9 +33,9 @@ class LocationPermissionView extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen.withOpacity(0.12),
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.accentNeon.withOpacity(0.3), width: 2),
+                  border: Border.all(color: AppTheme.accentNeon.withValues(alpha: 0.3), width: 2),
                 ),
                 child: const Icon(
                   Symbols.near_me,

@@ -3,68 +3,56 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../core/config/app_routes.dart';
+import '../features/auth/views/login_screen.dart';
+import '../features/auth/views/signup_screen.dart';
+import '../features/auth/views/profile_setup_screen.dart';
 import '../features/discovery/controllers/discovery_controller.dart';
 import '../features/discovery/views/poi_details_screen.dart';
-import '../features/history/views/history_screen.dart';
 import '../features/location/views/location_permission_view.dart';
-import '../features/map/controllers/map_controller.dart';
-import '../features/map/views/map_screen.dart';
 import '../features/navigation/views/navigation_screen.dart';
-import '../features/routing/controllers/routing_controller.dart';
-import '../features/routing/views/route_preview_view.dart';
-import '../features/search/views/search_screen.dart';
-import '../features/settings/views/settings_screen.dart';
+import '../features/routing/views/route_preview_screen.dart';
+import '../features/main/views/main_screen.dart';
 
-/// Central GoRouter configuration leveraging Provider state management
+/// Central GoRouter configuration leveraging StatefulShellRoute for Bottom Navigation Capsule
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.map,
+    initialLocation: AppRoutes.login,
     routes: [
-      // Interactive Map Route
+      // Auth Flow Routes
       GoRoute(
-        path: AppRoutes.map,
-        builder: (context, state) => MapScreen(
-          onSearchTap: () => context.push(AppRoutes.search),
-          onNavigateTap: () => context.push(AppRoutes.routePreview),
-          onLayersTap: () => context.push(AppRoutes.settings),
-        ),
+        path: AppRoutes.login,
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.signUp,
+        builder: (context, state) => const SignUpScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profileSetup,
+        builder: (context, state) => const ProfileSetupScreen(),
       ),
 
-      // Place Search & Autocomplete Route
+      // Main Shell with IndexedStack + Floating Bottom Nav
       GoRoute(
-        path: AppRoutes.search,
-        builder: (context, state) => SearchScreen(
-          onPlaceSelected: (place) {
-            context.read<MapController>().panTo(place.latitude, place.longitude, zoom: 15.0);
-            context.push(AppRoutes.routePreview);
+        path: AppRoutes.map,
+        builder: (context, state) => const MainScreen(),
+      ),
+
+      // Fullscreen Push Routes over the Shell
+      GoRoute(
+        path: AppRoutes.routePreview,
+        builder: (context, state) => RoutePreviewScreen(
+          onStartNavigation: () {
+            context.push(AppRoutes.navigation);
           },
         ),
       ),
 
-      // Route Preview & Corridor Selection Route
-      GoRoute(
-        path: AppRoutes.routePreview,
-        builder: (context, state) => Scaffold(
-          appBar: AppBar(title: const Text('Corridor Preview')),
-          body: Center(
-            child: RoutePreviewView(
-              onStartNavigation: () {
-                context.push(AppRoutes.navigation);
-              },
-            ),
-          ),
-        ),
-      ),
-
-      // Live Turn-by-Turn Navigation Screen
       GoRoute(
         path: AppRoutes.navigation,
-        builder: (context, state) => NavigationScreen(
-          onExitNavigation: () => context.go(AppRoutes.map),
-        ),
+        builder: (context, state) => ActiveNavigationScreen(),
       ),
 
-      // Waypoint Dossier Details Route
       GoRoute(
         path: AppRoutes.poiDetails,
         builder: (context, state) {
@@ -78,24 +66,6 @@ class AppRouter {
         },
       ),
 
-      // Navigation History Route
-      GoRoute(
-        path: AppRoutes.history,
-        builder: (context, state) => HistoryScreen(
-          onReplayTrip: (trip) {
-            context.read<RoutingController>().selectRouteById('route_riverine_scenic');
-            context.push(AppRoutes.routePreview);
-          },
-        ),
-      ),
-
-      // Settings & Preferences Route
-      GoRoute(
-        path: AppRoutes.settings,
-        builder: (context, state) => const SettingsScreen(),
-      ),
-
-      // Location Permission View
       GoRoute(
         path: AppRoutes.locationPermission,
         builder: (context, state) => LocationPermissionView(

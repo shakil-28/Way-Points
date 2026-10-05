@@ -14,5 +14,5 @@ void main() {
     ),
   );
   
-  runApp(WaypointApp());
+  runApp(const WaypointApp());
 }

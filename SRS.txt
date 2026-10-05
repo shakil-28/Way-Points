@@ -1,0 +1,34 @@
+Based on your SRS specification, WayPoint (Route Discovery Map) is a Flutter-based mobile application designed for online-first driving navigation enhanced with contextual, route-corridor point of interest (POI) discovery.
+Here are the key features of the application categorized by core functional area:
+1. Map & Location Services
+Interactive Map: Renders an interactive Google Map supporting pan/zoom gestures, custom route geometry, and standard or satellite map views.
+Live GPS Tracking: Displays a distinct current location marker, live position updates, and a one-tap control to re-center the map.
+Location Permission & Error Handling: Explains permission requirements and handles denied permissions or disabled device location gracefully.
+2. Destination Search & Travel History
+Place Search & Autocomplete: Search field providing real-time autocomplete suggestions for addresses, landmarks, and businesses.
+Destination Preview: Displays selected places on the map with essential place information.
+Local History: Stores recent searches and destinations locally on the device with an option to clear history.
+3. Route Calculation & Planning
+Route Metrics: Calculates driving routes from your current position and displays total distance, travel duration, and Estimated Time of Arrival (ETA).
+Alternative Driving Routes: Computes and displays alternative routes, allowing you to select your preferred path.
+Traffic & Route Preferences: Integrates traffic-aware routing and supports preferences like avoiding tolls and highways.
+4. Active Turn-by-Turn Navigation
+Maneuver Guidance: Real-time navigation panel showing upcoming maneuvers (e.g., turns) and remaining distance to the turn.
+Dynamic Trip Metrics: Continuously updates remaining distance, remaining duration, and ETA as you drive.
+Voice Guidance: Audio maneuver instructions during navigation.
+Off-Route Detection & Rerouting: Detects significant deviations from the route and recalculates dynamically.
+5. Route-Based POI Discovery (Core Differentiator)
+Geographic Route Corridor: Automatically identifies famous or interesting places located within a defined geographic buffer along your active route.
+Category Filtering: Filter POIs by categories (e.g., scenic, historical, dining, fuel) using map markers and discovery sheets.
+Clutter Management: Uses marker limits and clustering to prevent visual clutter on the map.
+Discovery Toggle: Option to hide or enable/disable discovery content so navigation is never obscured.
+6. POI Details & Detour Inspection
+Rich Information Cards: Selecting a POI displays images, place name, category, address, rating, short description, and opening hours.
+Calculated Detour Impact: Displays the additional travel time and distance required if you detour to the place.
+Direct Action Controls: Allows you to either Navigate Directly to the POI or Add Stop to your current trip.
+7. Multi-Stop Route Management
+Intermediate Waypoints: Insert a discovered POI as a stop along your route without losing your final destination.
+Automatic Metric Recalculation: Instantly updates overall geometry, distance, travel duration, and ETA after adding or removing stops.
+8. Settings & App Resilience
+Preferences: Options to switch unit measurements (Kilometers vs. Miles), adjust voice settings, and configure route parameters.
+Graceful Degradation: Built so navigation remains fully functional even if network connections drop or discovery services fail

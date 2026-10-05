@@ -1,4 +1,4 @@
-/// Model representing past navigated journeys and search queries
+/// Model representing past navigated journeys, fuel telemetry, and exploration badges
 class SearchHistoryModel {
   final String id;
   final String title;
@@ -9,6 +9,8 @@ class SearchHistoryModel {
   final DateTime timestamp;
   final String category;
   final int scenicStopsVisited;
+  final double fuelEfficiencyKmL;
+  final String badgeEarned;
   final double originLat;
   final double originLng;
   final double destinationLat;
@@ -24,6 +26,8 @@ class SearchHistoryModel {
     required this.timestamp,
     this.category = 'Highway',
     this.scenicStopsVisited = 1,
+    this.fuelEfficiencyKmL = 14.2,
+    this.badgeEarned = 'Mughal Explorer Badge',
     required this.originLat,
     required this.originLng,
     required this.destinationLat,
