@@ -35,6 +35,13 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setAvoidHighways(bool value) {
+    _settings = _settings.copyWith(
+      avoidHighways: value,
+    );
+    notifyListeners();
+  }
+
   void setAutoRerouteScenic(bool value) {
     _settings = _settings.copyWith(
       autoRerouteScenic: value,
@@ -45,6 +52,20 @@ class SettingsController extends ChangeNotifier {
   void setVoicePrompts(bool value) {
     _settings = _settings.copyWith(
       voicePromptsEnabled: value,
+    );
+    notifyListeners();
+  }
+
+  void setSpeedLimitWarnings(bool value) {
+    _settings = _settings.copyWith(
+      speedLimitWarnings: value,
+    );
+    notifyListeners();
+  }
+
+  void setVoiceLanguage(String language) {
+    _settings = _settings.copyWith(
+      voiceLanguage: language,
     );
     notifyListeners();
   }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/widgets/waypoint_logo.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -7,7 +6,6 @@ import '../../../core/utils/time_utils.dart';
 import '../controllers/history_controller.dart';
 import '../models/search_history_model.dart';
 
-/// Travel History page matching the HTML design spec.
 class HistoryScreen extends StatefulWidget {
   final HistoryController? controller;
   final ValueChanged<SearchHistoryModel>? onReplayTrip;
@@ -49,8 +47,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          _roundActionBtn(icon: Symbols.arrow_back, onTap: () => Navigator.of(context).maybePop(), isDark: isDark),
-                          const Expanded(child: Center(child: Text('Travel History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))))),
+                          _roundActionBtn(
+                              icon: Symbols.arrow_back,
+                              onTap: () => Navigator.of(context).maybePop(),
+                              isDark: isDark,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                          Expanded(child: Center(child: Text('Travel History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))))),
                           _roundActionBtn(icon: Symbols.restart_alt, onTap: () => (widget.controller ?? context.read<HistoryController>()).toggleClearModal(true), color: const Color(0xFF64748B), isDark: isDark),
                         ],
                       ),
@@ -105,7 +108,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Consumer<HistoryController>(
             builder: (context, ctrl, _) {
               if (!ctrl.showClearModal) return const SizedBox.shrink();
-              return _clearModal(ctrl);
+              return _clearModal(ctrl, context);
             },
           ),
         ],
@@ -114,10 +117,34 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _roundActionBtn({required IconData icon, required VoidCallback onTap, Color color = const Color(0xFF0F172A), required bool isDark}) {
+  Widget _roundActionBtn({
+    required IconData icon,
+    required VoidCallback? onTap,
+    required Color color,
+    required bool isDark,
+  }) {
+    final bgColor = isDark ? AppTheme.darkCard : Colors.white;
+    final borderColor = isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0);
+    if (onTap == null) {
+      return SizedBox(
+        width: 40,
+        height: 40,
+        child: Material(
+          color: bgColor,
+          shape: CircleBorder(side: BorderSide(color: borderColor)),
+          elevation: 1,
+          shadowColor: Colors.black.withValues(alpha: 0.06),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: () => Navigator.of(context).maybePop(),
+            child: SizedBox(width: 40, height: 40, child: Icon(icon, size: 20, color: color)),
+          ),
+        ),
+      );
+    }
     return Material(
-      color: Colors.white,
-      shape: const CircleBorder(side: BorderSide(color: Color(0xFFE2E8F0))),
+      color: bgColor,
+      shape: CircleBorder(side: BorderSide(color: borderColor)),
       elevation: 1,
       shadowColor: Colors.black.withValues(alpha: 0.06),
       child: InkWell(
@@ -178,9 +205,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 text: TextSpan(
                   style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : const Color(0xFF475569)),
                   children: [
-                    TextSpan(text: '$tripCount ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Color(0xFF0F172A))),
+                    TextSpan(text: '$tripCount ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: isDark ? Colors.white : const Color(0xFF0F172A))),
                     TextSpan(text: 'trips recorded • '),
-                    TextSpan(text: totalKm.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m.group(1)},'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Color(0xFF0F172A))),
+                    TextSpan(text: totalKm.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m.group(1)},'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: isDark ? Colors.white : const Color(0xFF0F172A))),
                     TextSpan(text: ' km traveled • '),
                     TextSpan(text: '$scenicCount ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: AppTheme.primaryGreen)),
                     TextSpan(text: 'scenic corridors discovered'),
@@ -308,7 +335,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     children: [
                       Text(
                         trip.title,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A)),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -362,7 +389,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   children: [
                     const Icon(Symbols.cloud_done, size: 15, color: Color(0xFF2563EB)),
                     const SizedBox(width: 4),
-                    const Text('Clear • 29°C', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                    Text('Clear • 29°C', style: TextStyle(fontSize: 11, color: isDark ? Colors.white.withValues(alpha: 0.4) : const Color(0xFF64748B))),
                   ],
                 ),
               ],
@@ -393,6 +420,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _replayBtn(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         // pulse animation feedback
@@ -401,7 +429,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         width: 36,
         height: 36,
         decoration: BoxDecoration(color: const Color(0xFFF1F5F9), shape: BoxShape.circle),
-        child: const Icon(Symbols.near_me, size: 18, color: Color(0xFF64748B)),
+        child: Icon(Symbols.near_me, size: 18, color: isDark ? Colors.white70 : const Color(0xFF64748B)),
       ),
     );
   }
@@ -424,7 +452,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             children: [
               const Icon(Symbols.insights, size: 18, color: AppTheme.primaryGreen),
               const SizedBox(width: 8),
-              const Text('Exploration Snapshot', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+              Text('Exploration Snapshot', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))),
               const Spacer(),
               Text('Top Sector: Savar West', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.primaryGreen, letterSpacing: 0.5)),
             ],
@@ -480,7 +508,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: const Icon(Symbols.explore, size: 32, color: AppTheme.primaryGreen),
             ),
             const SizedBox(height: 16),
-            const Text('Your Trail is Fresh', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF0F172A))),
+            Text('Your Trail is Fresh', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF0F172A))),
             const SizedBox(height: 6),
             Text(
               'Start navigating to log your first scenic corridor journey.',
@@ -501,7 +529,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1C1B1E) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFFECACA)),
         ),
@@ -519,7 +547,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   // ── Clear Modal ─────────────────────────────────────────────────────────
 
-  Widget _clearModal(HistoryController ctrl) {
+  Widget _clearModal(HistoryController ctrl, BuildContext ctx) {
+    final isDark = Theme.of(ctx).brightness == Brightness.dark;
     return Container(
       color: Colors.black.withValues(alpha: 0.5),
       child: Center(
@@ -527,7 +556,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 24),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? AppTheme.darkCard : Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 24, offset: const Offset(0, 8))],
           ),
@@ -538,7 +567,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 children: [
                   Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFFEE2E2), shape: BoxShape.circle), child: const Icon(Symbols.warning, size: 22, color: Color(0xFFDC2626))),
                   const SizedBox(width: 12),
-                  const Text('Clear Travel History?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                  Text('Clear Travel History?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))),
                 ],
               ),
               const SizedBox(height: 12),

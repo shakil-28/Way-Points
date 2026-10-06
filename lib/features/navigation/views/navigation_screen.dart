@@ -38,8 +38,9 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
   static const Color amber = Color(0xFFD97706);
   static const Color borderColor = Color(0xFFE2E8F0);
 
-  static const double _headerHeight = 56;
-  static const double _maneuverGap = 10;
+  static const double _headerTop = 12;
+  static const double _headerHeight = 54;
+  static const double _maneuverGap = 12;
 
   static const List<double> _snapSizes = <double>[0.10, 0.25, 0.50, 0.80];
 
@@ -169,12 +170,12 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
             ),
 
             // -----------------------------------------------------------------
-            // 2. FIXED CONTEXT HEADER
+            // 2. FLOATING CONTEXT HEADER
             // -----------------------------------------------------------------
             Positioned(
-              top: 0,
-              left: 12,
-              right: 12,
+              top: _headerTop,
+              left: 16,
+              right: 16,
               height: _headerHeight,
               child: _buildContextHeader(isDark),
             ),
@@ -183,7 +184,7 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
             // 3. FIXED MANEUVER HUD CARD
             // -----------------------------------------------------------------
             Positioned(
-              top: _headerHeight + _maneuverGap,
+              top: _headerTop + _headerHeight + _maneuverGap,
               left: 16,
               right: 16,
               child: _buildManeuverCard(navCtrl, isDark),
@@ -193,7 +194,7 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
             // 4. FIXED POI CALLOUT BADGES ALONG CORRIDOR
             // -----------------------------------------------------------------
             Positioned(
-              top: _headerHeight + 175,
+              top: _headerTop + _headerHeight + 180,
               left: 16,
               child: _buildPoiBadge(
                 icon: Symbols.account_balance,
@@ -204,7 +205,7 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
               ),
             ),
             Positioned(
-              top: _headerHeight + 245,
+              top: _headerTop + _headerHeight + 250,
               right: 16,
               child: _buildPoiBadge(
                 icon: Symbols.mosque,
@@ -289,42 +290,126 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
 
   Widget _buildContextHeader(bool isDark) {
     return SizedBox(
-      height: 56,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Left: Back button
-          Positioned(
-            left: 10,
-            child: _roundActionButton(
-              icon: Symbols.arrow_back,
-              onTap: () => _confirmExitNavigation(),
-              isDark: isDark,
-            ),
+      height: _headerHeight,
+      child: Row(
+        children: <Widget>[
+          // Left: Floating circular back button
+          _roundActionButton(
+            icon: Symbols.arrow_back,
+            onTap: () => _confirmExitNavigation(),
+            isDark: isDark,
           ),
 
-          // Center: Title
-          Center(
-            child: Text(
-              'Active Navigation',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: isDark ? Colors.white : textPrimary,
-                letterSpacing: -0.2,
+          // Center: Floating title, logo, and LIVE badge
+          Expanded(
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  // Waypoint logo with elevation glow
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(
+                          color: AppTheme.accentNeon.withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Floating title text with dual contrast shadow for proper visualization on map
+                  Flexible(
+                    child: Text(
+                      'Active Navigation',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : textPrimary,
+                        letterSpacing: -0.2,
+                        shadows: <Shadow>[
+                          // Contrast halo shadow for map readability
+                          Shadow(
+                            color: (isDark ? Colors.black : Colors.white)
+                                .withValues(alpha: 0.95),
+                            blurRadius: 10,
+                            offset: const Offset(0, 1),
+                          ),
+                          // Deep drop shadow for floating elevation
+                          Shadow(
+                            color: Colors.black.withValues(alpha: isDark ? 0.70 : 0.22),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Floating LIVE indicator badge with elevation shadow
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF064E3B).withValues(alpha: 0.92)
+                          : const Color(0xFFE6F7F0),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDark
+                            ? const Color(0xFF059669)
+                            : const Color(0xFFA3E6D2),
+                        width: 1,
+                      ),
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.14),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryGreen,
+                            shape: BoxShape.circle,
+                          ),
+                          child: SizedBox(width: 6, height: 6),
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'LIVE',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.6,
+                            color: AppTheme.primaryGreen,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
 
-          // Right: Profile button
-          Positioned(
-            right: 10,
-            child: _roundActionButton(
-              icon: Symbols.person,
-              onTap: _showProfilePlaceholder,
-              isProfile: true,
-              isDark: isDark,
-            ),
+          // Right: Floating circular profile button
+          _roundActionButton(
+            icon: Symbols.person,
+            onTap: _showProfilePlaceholder,
+            isProfile: true,
+            isDark: isDark,
           ),
         ],
       ),
@@ -341,29 +426,47 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
         ? (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))
         : (isDark ? AppTheme.darkCard : Colors.white);
 
-    return Material(
-      color: bgColor,
-      shape: CircleBorder(
-        side: BorderSide(
-          color: isProfile
-              ? (isDark ? AppTheme.darkBorder : Colors.white)
-              : (isDark ? AppTheme.darkBorder : borderColor),
-          width: isProfile ? 2 : 1,
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.40 : 0.16),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.08),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+            spreadRadius: 0,
+          ),
+        ],
       ),
-      elevation: isProfile ? 0 : 1,
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: 38,
-          height: 38,
-          child: Icon(
-            icon,
-            size: 20,
+      child: Material(
+        color: bgColor,
+        shape: CircleBorder(
+          side: BorderSide(
             color: isProfile
-                ? (isDark ? Colors.white70 : textSecondary)
-                : (isDark ? Colors.white : textPrimary),
+                ? (isDark ? AppTheme.darkBorder : Colors.white)
+                : (isDark ? AppTheme.darkBorder : borderColor),
+            width: isProfile ? 2 : 1,
+          ),
+        ),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(
+              icon,
+              size: 21,
+              color: isProfile
+                  ? (isDark ? Colors.white70 : textSecondary)
+                  : (isDark ? Colors.white : textPrimary),
+            ),
           ),
         ),
       ),

@@ -36,6 +36,7 @@ class _MainScreenState extends State<MainScreen> {
       ),
       bottomNavigationBar: WayPointBottomNavBar(
         currentIndex: _currentIndex,
+        isDark: Theme.of(context).brightness == Brightness.dark,
         onTap: (index) => setState(() => _currentIndex = index),
       ),
     );
@@ -46,11 +47,13 @@ class _MainScreenState extends State<MainScreen> {
 class WayPointBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final bool isDark;
 
   const WayPointBottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.isDark = false,
   });
 
   @override
@@ -78,15 +81,19 @@ class WayPointBottomNavBar extends StatelessWidget {
                 height: 64,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
+                  color: isDark
+                      ? const Color(0xFF1C1B1E).withValues(alpha: 0.95)
+                      : Colors.white.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: const Color(0xFFE2E8F0),
+                    color: isDark
+                        ? const Color(0xFF363436)
+                        : const Color(0xFFE2E8F0),
                     width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.10),
+                      color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.10),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -99,24 +106,28 @@ class WayPointBottomNavBar extends StatelessWidget {
                       icon: Symbols.explore,
                       label: 'Explore',
                       isSelected: currentIndex == 0,
+                      isDark: isDark,
                       onTap: () => onTap(0),
                     ),
                     _NavItem(
                       icon: Symbols.search,
                       label: 'Search',
                       isSelected: currentIndex == 1,
+                      isDark: isDark,
                       onTap: () => onTap(1),
                     ),
                     _NavItem(
                       icon: Symbols.history,
                       label: 'History',
                       isSelected: currentIndex == 2,
+                      isDark: isDark,
                       onTap: () => onTap(2),
                     ),
                     _NavItem(
                       icon: Symbols.settings,
                       label: 'Settings',
                       isSelected: currentIndex == 3,
+                      isDark: isDark,
                       onTap: () => onTap(3),
                     ),
                   ],
@@ -134,21 +145,26 @@ class _NavItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isSelected;
+  final bool isDark;
   final VoidCallback onTap;
 
   const _NavItem({
     required this.icon,
     required this.label,
     required this.isSelected,
+    required this.isDark,
     required this.onTap,
   });
   static const Color _activeColor = Color(0xFF025939);
   static const Color _inactiveColor = Color(0xFF64748B);
+  static const Color _darkInactiveColor = Color(0xFF94A3B8);
 
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? _activeColor : _inactiveColor;
+    final color = isSelected
+        ? _activeColor
+        : (isDark ? _darkInactiveColor : _inactiveColor);
 
     return Expanded(
       child: Material(
@@ -196,7 +212,7 @@ class _NavItem extends StatelessWidget {
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: _activeColor.withValues(alpha: 0.20),
+                                  color: _activeColor.withValues(alpha: isDark ? 0.4 : 0.20),
                                   blurRadius: 3,
                                 ),
                               ]
