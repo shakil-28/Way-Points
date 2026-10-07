@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/context_header.dart';
 import '../controllers/settings_controller.dart';
 import '../models/settings_model.dart';
 
@@ -176,124 +177,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Listen to controller changes so the UI rebuilds automatically.
-    final s = _ctrl.settings;
+    return Consumer<SettingsController>(
+      builder: (context, controller, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final settings = controller.settings;
 
-    return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkCanvas : const Color(0xFFF8FAF9),
-      extendBodyBehindAppBar: false,
-      body: SafeArea(
-        bottom: true,
-        child: Column(
-          children: [
-            // ── Fixed header ──────────────────────────────────────────
-            _buildContextHeader(isDark),
-            // ── Scrollable settings content ───────────────────────────
-            Expanded(
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                    sliver: SliverList(
-                      delegate: SliverChildListDelegate([
-                        _buildAppearanceSection(isDark, s),
-                        const SizedBox(height: 20),
-                        _buildNavigationPreferences(isDark, s),
-                        const SizedBox(height: 20),
-                        _buildAccountPreferences(isDark, s),
-                        const SizedBox(height: 20),
-                        _buildAboutSection(isDark, s),
-                      ]),
-                    ),
+        return Scaffold(
+          backgroundColor: isDark ? AppTheme.darkCanvas : const Color(0xFFF8FAF9),
+          extendBodyBehindAppBar: false,
+          body: SafeArea(
+            bottom: true,
+            child: Column(
+              children: [
+                // ── Fixed header ──────────────────────────────────────────
+                _buildContextHeader(isDark),
+                // ── Scrollable settings content ───────────────────────────
+                Expanded(
+                  child: CustomScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
+                            _buildAppearanceSection(isDark, settings),
+                            const SizedBox(height: 20),
+                            _buildNavigationPreferences(isDark, settings),
+                            const SizedBox(height: 20),
+                            _buildAccountPreferences(isDark, settings),
+                            const SizedBox(height: 20),
+                            _buildAboutSection(isDark, settings),
+                          ]),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   // ── Fixed Header ────────────────────────────────────────────────────────────
 
   Widget _buildContextHeader(bool isDark) {
-    return Container(
-      height: 56,
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Stack(
-        children: [
-          // Back button — left aligned
-          Align(
-            alignment: Alignment.centerLeft,
-            child: _roundActionBtn(
-              icon: Symbols.arrow_back,
-              onTap: null,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
-              isDark: isDark,
-            ),
-          ),
-          // Title — mathematically centered
-          Center(
-            child: Text(
-              'Settings',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A)),
-            ),
-          ),
-          // Reset button — right aligned
-          Align(
-            alignment: Alignment.centerRight,
-            child: _roundActionBtn(
-              icon: Symbols.restart_alt,
-              onTap: _resetDefaults,
-              color: isDark ? Colors.white70 : const Color(0xFF64748B),
-              isDark: isDark,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _roundActionBtn({
-    required IconData icon,
-    required VoidCallback? onTap,
-    required Color color,
-    required bool isDark,
-  }) {
-    final bgColor = isDark ? AppTheme.darkCard : Colors.white;
-    final borderColor = isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0);
-    if (onTap == null) {
-      return SizedBox(
-        width: 40,
-        height: 40,
-        child: Material(
-          color: bgColor,
-          shape: CircleBorder(side: BorderSide(color: borderColor)),
-          elevation: 1,
-          shadowColor: Colors.black.withValues(alpha: 0.06),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () => Navigator.of(context).maybePop(),
-            child: SizedBox(width: 40, height: 40, child: Icon(icon, size: 20, color: color)),
+      child: ContextHeader(
+        title: 'Settings',
+        isDark: isDark,
+        onBack: () => Navigator.of(context).maybePop(),
+        onProfile: () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile setup accessible from main menu.'),
+            behavior: SnackBarBehavior.floating,
           ),
         ),
-      );
-    }
-    return Material(
-      color: bgColor,
-      shape: CircleBorder(side: BorderSide(color: borderColor)),
-      elevation: 1,
-      shadowColor: Colors.black.withValues(alpha: 0.06),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(width: 40, height: 40, child: Icon(icon, size: 20, color: color)),
       ),
     );
   }

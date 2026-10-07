@@ -22,13 +22,17 @@ class SearchView extends StatefulWidget {
 }
 
 class _SearchViewState extends State<SearchView> {
-  late TextEditingController _textController;
+  TextEditingController _textController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    final searchCtrl = widget.controller ?? context.read<PlaceSearchController>();
-    _textController = TextEditingController(text: searchCtrl.query.isEmpty ? 'Lalbagh Fort' : searchCtrl.query);
+    // Initialize text from the controller (available after mount when Provider is ready)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final ctrl = widget.controller ?? context.read<PlaceSearchController>();
+      _textController.text = ctrl.query.isEmpty ? 'Lalbagh Fort' : ctrl.query;
+    });
   }
 
   @override
@@ -42,15 +46,6 @@ class _SearchViewState extends State<SearchView> {
     final searchCtrl = widget.controller ?? context.watch<PlaceSearchController>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-
-    final categories = [
-      {'emoji': '🕌', 'label': 'Mosques', 'id': 'mosques'},
-      {'emoji': '🌴', 'label': 'Scenic', 'id': 'scenic'},
-      {'emoji': '🛍️', 'label': 'Bazaars', 'id': 'bazaars'},
-      {'emoji': '🍛', 'label': 'Restaurants', 'id': 'food'},
-      {'emoji': '⛽', 'label': 'Fuel/Gas', 'id': 'fuel'},
-      {'emoji': '🏡', 'label': 'Resorts', 'id': 'resorts'},
-    ];
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -121,68 +116,7 @@ class _SearchViewState extends State<SearchView> {
           ),
         ),
 
-        const SizedBox(height: 12),
-
-        // Horizontal Category Chips Row
-        SizedBox(
-          height: 36,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: categories.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final cat = categories[index];
-              final isSelected = searchCtrl.selectedCategory == cat['id'] || (searchCtrl.selectedCategory == 'all' && cat['id'] == 'scenic');
-
-              return GestureDetector(
-                onTap: () {
-                  searchCtrl.selectCategory(cat['id']!);
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFFE6F7F0)
-                        : (isDark ? AppTheme.darkCard : Colors.white),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppTheme.primaryGreen
-                          : (isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0)),
-                      width: isSelected ? 2.0 : 1.0,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(cat['emoji']!, style: const TextStyle(fontSize: 14)),
-                      const SizedBox(width: 6),
-                      Text(
-                        cat['label']!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                          color: isSelected ? AppTheme.primaryGreen : (isDark ? Colors.white70 : const Color(0xFF1E293B)),
-                        ),
-                      ),
-                      if (isSelected) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.primaryGreen,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+        const SizedBox(height: 12)
       ],
     );
   }

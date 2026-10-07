@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/context_header.dart';
 import '../../../core/utils/time_utils.dart';
 import '../controllers/history_controller.dart';
 import '../models/search_history_model.dart';
@@ -45,17 +46,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          _roundActionBtn(
-                              icon: Symbols.arrow_back,
-                              onTap: () => Navigator.of(context).maybePop(),
-                              isDark: isDark,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      child: ContextHeader(
+                        title: 'Travel History',
+                        isDark: isDark,
+                        onBack: () => Navigator.of(context).maybePop(),
+                        onProfile: () => ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Profile setup accessible from main menu.'),
+                            behavior: SnackBarBehavior.floating,
                           ),
-                          Expanded(child: Center(child: Text('Travel History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))))),
-                          _roundActionBtn(icon: Symbols.restart_alt, onTap: () => (widget.controller ?? context.read<HistoryController>()).toggleClearModal(true), color: const Color(0xFF64748B), isDark: isDark),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -113,44 +113,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ],
       ),
-      ),
-    );
-  }
-
-  Widget _roundActionBtn({
-    required IconData icon,
-    required VoidCallback? onTap,
-    required Color color,
-    required bool isDark,
-  }) {
-    final bgColor = isDark ? AppTheme.darkCard : Colors.white;
-    final borderColor = isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0);
-    if (onTap == null) {
-      return SizedBox(
-        width: 40,
-        height: 40,
-        child: Material(
-          color: bgColor,
-          shape: CircleBorder(side: BorderSide(color: borderColor)),
-          elevation: 1,
-          shadowColor: Colors.black.withValues(alpha: 0.06),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () => Navigator.of(context).maybePop(),
-            child: SizedBox(width: 40, height: 40, child: Icon(icon, size: 20, color: color)),
-          ),
-        ),
-      );
-    }
-    return Material(
-      color: bgColor,
-      shape: CircleBorder(side: BorderSide(color: borderColor)),
-      elevation: 1,
-      shadowColor: Colors.black.withValues(alpha: 0.06),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(width: 40, height: 40, child: Icon(icon, size: 20, color: color)),
       ),
     );
   }

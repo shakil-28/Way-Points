@@ -56,7 +56,7 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.poiDetails,
         builder: (context, state) {
-          final discoveryController = context.watch<DiscoveryController>();
+          final discoveryController = context.read<DiscoveryController>();
           return PoiDetailsScreen(
             poi: discoveryController.activePoi,
             onAddStop: () {

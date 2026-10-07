@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/context_header.dart';
 import '../../../core/utils/time_utils.dart';
 import '../controllers/routing_controller.dart';
 import '../../map/controllers/map_controller.dart';
@@ -25,6 +26,7 @@ class RoutePreviewScreen extends StatefulWidget {
 
 class _RoutePreviewScreenState extends State<RoutePreviewScreen>
     with SingleTickerProviderStateMixin {
+
   late AnimationController _pulseController;
   @override
   void initState() {
@@ -80,36 +82,32 @@ class _RoutePreviewScreenState extends State<RoutePreviewScreen>
           _buildPoiPin(context, isDark, offsetFraction: const Offset(0.43, 0.62), icon: Symbols.local_cafe, label: 'Shitolokkha Rest', detour: '+2 min'),
           _buildPoiPin(context, isDark, offsetFraction: const Offset(0.62, 0.45), icon: Symbols.ev_station, label: 'Narsingdi EV'),
           _buildPoiPin(context, isDark, offsetFraction: const Offset(0.78, 0.30), icon: Symbols.park, label: 'Tea Garden View'),
-
-          // ── Top-right status pills ──────────────────────────────────
+          // -- Context Header --
           Positioned(
-            top: 12,
+            top: 6,
             left: 16,
             right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _statusPill(
-                  context,
-                  icon: Symbols.alt_route,
-                  label: 'Route Options',
-                  isDark: isDark,
+            child: ContextHeader(
+              title: 'Route Preview',
+              isDark: isDark,
+              onBack: () =>
+                  widget.onCancel != null
+                      ? widget.onCancel!()
+                      : Navigator.of(context).maybePop(),
+              onProfile: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Profile setup accessible from main menu.'),
+                  behavior: SnackBarBehavior.floating,
                 ),
-                _statusPill(
-                  context,
-                  icon: Symbols.eco,
-                  label: 'Optimal Fuel',
-                  color: const Color(0xFF059669),
-                  bgColor: const Color(0xFFD1FAE5),
-                  isDark: isDark,
-                ),
-              ],
+              ),
             ),
           ),
+
 
           // ── Right-side map controls ─────────────────────────────────
           Positioned(
             right: 16,
+            left: 16,
             bottom: MediaQuery.of(context).padding.bottom + 320,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -351,14 +349,6 @@ class _RoutePreviewBottomCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Handle bar
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
           const SizedBox(height: 16),
 
           // Selected route summary

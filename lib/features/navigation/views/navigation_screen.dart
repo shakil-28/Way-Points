@@ -7,6 +7,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/context_header.dart';
 import '../../../core/utils/geoutils.dart';
 import '../../../core/utils/time_utils.dart';
 import '../../map/controllers/map_controller.dart';
@@ -289,186 +290,13 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
   // ---------------------------------------------------------------------------
 
   Widget _buildContextHeader(bool isDark) {
-    return SizedBox(
-      height: _headerHeight,
-      child: Row(
-        children: <Widget>[
-          // Left: Floating circular back button
-          _roundActionButton(
-            icon: Symbols.arrow_back,
-            onTap: () => _confirmExitNavigation(),
-            isDark: isDark,
-          ),
-
-          // Center: Floating title, logo, and LIVE badge
-          Expanded(
-            child: Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  // Waypoint logo with elevation glow
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: <BoxShadow>[
-                        BoxShadow(
-                          color: AppTheme.accentNeon.withValues(alpha: 0.35),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-
-                  // Floating title text with dual contrast shadow for proper visualization on map
-                  Flexible(
-                    child: Text(
-                      'Active Navigation',
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : textPrimary,
-                        letterSpacing: -0.2,
-                        shadows: <Shadow>[
-                          // Contrast halo shadow for map readability
-                          Shadow(
-                            color: (isDark ? Colors.black : Colors.white)
-                                .withValues(alpha: 0.95),
-                            blurRadius: 10,
-                            offset: const Offset(0, 1),
-                          ),
-                          // Deep drop shadow for floating elevation
-                          Shadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.70 : 0.22),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-
-                  // Floating LIVE indicator badge with elevation shadow
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF064E3B).withValues(alpha: 0.92)
-                          : const Color(0xFFE6F7F0),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isDark
-                            ? const Color(0xFF059669)
-                            : const Color(0xFFA3E6D2),
-                        width: 1,
-                      ),
-                      boxShadow: <BoxShadow>[
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.14),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen,
-                            shape: BoxShape.circle,
-                          ),
-                          child: SizedBox(width: 6, height: 6),
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          'LIVE',
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.6,
-                            color: AppTheme.primaryGreen,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Right: Floating circular profile button
-          _roundActionButton(
-            icon: Symbols.person,
-            onTap: _showProfilePlaceholder,
-            isProfile: true,
-            isDark: isDark,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _roundActionButton({
-    required IconData icon,
-    required VoidCallback onTap,
-    bool isProfile = false,
-    required bool isDark,
-  }) {
-    final bgColor = isProfile
-        ? (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))
-        : (isDark ? AppTheme.darkCard : Colors.white);
-
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.40 : 0.16),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.08),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Material(
-        color: bgColor,
-        shape: CircleBorder(
-          side: BorderSide(
-            color: isProfile
-                ? (isDark ? AppTheme.darkBorder : Colors.white)
-                : (isDark ? AppTheme.darkBorder : borderColor),
-            width: isProfile ? 2 : 1,
-          ),
-        ),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: SizedBox(
-            width: 44,
-            height: 44,
-            child: Icon(
-              icon,
-              size: 21,
-              color: isProfile
-                  ? (isDark ? Colors.white70 : textSecondary)
-                  : (isDark ? Colors.white : textPrimary),
-            ),
-          ),
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ContextHeader(
+        title: 'Active Navigation',
+        isDark: isDark,
+        onBack: () => _confirmExitNavigation(),
+        onProfile: _showProfilePlaceholder,
       ),
     );
   }
