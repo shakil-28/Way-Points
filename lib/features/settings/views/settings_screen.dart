@@ -405,7 +405,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1C1B1D) : const Color(0xFFF8FAFC),
+        color: isDark ? Color(0xFF1C1B1D) : Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: isDark ? AppTheme.darkBorder : const Color(0xFFF1F5F9)),
       ),

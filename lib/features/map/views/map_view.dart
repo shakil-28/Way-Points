@@ -1,12 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/map_controller.dart';
 import '../models/map_state_model.dart';
 
-/// Vector Map View rendering realistic Bengal corridor geography:
-/// Buriganga River bend, Padma estuary, Dhaka expressway overpass, route glow, and radar pulse.
+/// Vector Map View rendering realistic Bengal corridor geography and live GPS location marker
 class MapView extends StatefulWidget {
   final MapController? controller;
   final ValueChanged<String>? onMarkerTap;
@@ -57,6 +55,7 @@ class _MapViewState extends State<MapView> with SingleTickerProviderStateMixin {
               zoom: state.zoomLevel,
               pulseVal: _pulseController.value,
               layerMode: state.layerMode,
+              screenMode: state.screenMode,
               activePoiId: state.activePoiId,
             ),
             child: const SizedBox.expand(),
@@ -72,6 +71,7 @@ class _BengalMapPainter extends CustomPainter {
   final double zoom;
   final double pulseVal;
   final MapLayerMode layerMode;
+  final MapScreenMode screenMode;
   final String? activePoiId;
 
   _BengalMapPainter({
@@ -79,17 +79,22 @@ class _BengalMapPainter extends CustomPainter {
     required this.zoom,
     required this.pulseVal,
     required this.layerMode,
+    required this.screenMode,
     this.activePoiId,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Background terrain fill
-    final bgPaint = Paint()
-      ..color = isDark ? const Color(0xFF141315) : const Color(0xFFF1F5F3);
-    canvas.drawRect(Offset.zero & size, bgPaint);
+    // 1. Terrain Base Fill
+    Color bgColor;
+    if (layerMode == MapLayerMode.satellite) {
+      bgColor = isDark ? const Color(0xFF0F1B15) : const Color(0xFF1E3A2F);
+    } else {
+      bgColor = isDark ? const Color(0xFF141315) : const Color(0xFFF1F5F3);
+    }
+    canvas.drawRect(Offset.zero & size, Paint()..color = bgColor);
 
-    // Subtle grid coordinates
+    // 2. Subtle Grid Lines
     final gridPaint = Paint()
       ..color = (isDark ? Colors.white : Colors.black).withValues(alpha: 0.04)
       ..strokeWidth = 1.0;
@@ -102,7 +107,7 @@ class _BengalMapPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
-    // Buriganga & Meghna river system (curved organic bezier path)
+    // 3. Buriganga & Meghna River Network
     final riverPath = Path();
     riverPath.moveTo(size.width * 0.1, size.height * 0.15);
     riverPath.cubicTo(
@@ -118,51 +123,90 @@ class _BengalMapPainter extends CustomPainter {
     final riverPaint = Paint()
       ..color = isDark ? const Color(0xFF0D2538) : const Color(0xFFCCE4F7)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 18.0
+      ..strokeWidth = 20.0
       ..strokeCap = StrokeCap.round;
     canvas.drawPath(riverPath, riverPaint);
 
-    // Main corridor route (Dhaka -> N1 Highway / Padma corridor)
-    final routePath = Path();
-    routePath.moveTo(size.width * 0.25, size.height * 0.82);
-    routePath.lineTo(size.width * 0.45, size.height * 0.55);
-    routePath.lineTo(size.width * 0.70, size.height * 0.38);
-    routePath.lineTo(size.width * 0.85, size.height * 0.22);
-
-    // Route Outer Glow
-    final glowPaint = Paint()
-      ..color = AppTheme.accentNeon.withValues(alpha: isDark ? 0.35 : 0.25)
+    // 4. Secondary Road Network Streets
+    final streetPaint = Paint()
+      ..color = (isDark ? Colors.white12 : Colors.black12)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 12.0
-      ..strokeCap = StrokeCap.round;
-    canvas.drawPath(routePath, glowPaint);
+      ..strokeWidth = 3.0;
 
-    // Route Solid Core
-    final corePaint = Paint()
-      ..color = AppTheme.accentNeon
+    final streetPath = Path();
+    streetPath.moveTo(0, size.height * 0.35);
+    streetPath.lineTo(size.width, size.height * 0.35);
+    streetPath.moveTo(size.width * 0.6, 0);
+    streetPath.lineTo(size.width * 0.6, size.height);
+    canvas.drawPath(streetPath, streetPaint);
+
+    // 5. Active Navigation / Route Polylines (ONLY rendered in routePreview or navigation mode)
+    if (screenMode == MapScreenMode.routePreview || screenMode == MapScreenMode.navigation) {
+      final routePath = Path();
+      routePath.moveTo(size.width * 0.25, size.height * 0.82);
+      routePath.lineTo(size.width * 0.45, size.height * 0.55);
+      routePath.lineTo(size.width * 0.70, size.height * 0.38);
+      routePath.lineTo(size.width * 0.85, size.height * 0.22);
+
+      // Route Outer Glow
+      final glowPaint = Paint()
+        ..color = AppTheme.primaryGreen.withValues(alpha: isDark ? 0.35 : 0.25)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 14.0
+        ..strokeCap = StrokeCap.round;
+      canvas.drawPath(routePath, glowPaint);
+
+      // Route Solid Core (Sapphire / Emerald)
+      final corePaint = Paint()
+        ..color = const Color(0xFF0051D5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6.0
+        ..strokeCap = StrokeCap.round;
+      canvas.drawPath(routePath, corePaint);
+    }
+
+    // 6. Live GPS Location Marker (CENTERED on map when navigation not started / in explore mode)
+    final gpsCenterPos = Offset(size.width * 0.50, size.height * 0.44);
+
+    // Pulsing outer radar halo ring 1
+    final waveRadius1 = 20.0 + (pulseVal * 36.0);
+    final wavePaint1 = Paint()
+      ..color = AppTheme.primaryGreen.withValues(alpha: (1.0 - pulseVal).clamp(0.0, 1.0) * 0.35)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(gpsCenterPos, waveRadius1, wavePaint1);
+
+    // Pulsing outer radar halo ring 2
+    final waveRadius2 = 10.0 + (pulseVal * 20.0);
+    final wavePaint2 = Paint()
+      ..color = AppTheme.primaryGreen.withValues(alpha: (1.0 - pulseVal).clamp(0.0, 1.0) * 0.5)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(gpsCenterPos, waveRadius2, wavePaint2);
+
+    // Directional heading cone pointer above location dot
+    final conePath = Path();
+    conePath.moveTo(gpsCenterPos.dx, gpsCenterPos.dy - 22);
+    conePath.lineTo(gpsCenterPos.dx - 7, gpsCenterPos.dy - 8);
+    conePath.lineTo(gpsCenterPos.dx + 7, gpsCenterPos.dy - 8);
+    conePath.close();
+
+    final conePaint = Paint()..color = AppTheme.primaryGreen;
+    canvas.drawPath(conePath, conePaint);
+
+    // White outer ring badge
+    final outerRingPaint = Paint()..color = Colors.white;
+    canvas.drawCircle(gpsCenterPos, 12.0, outerRingPaint);
+
+    final borderRingPaint = Paint()
+      ..color = AppTheme.primaryGreen.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 5.0
-      ..strokeCap = StrokeCap.round;
-    canvas.drawPath(routePath, corePaint);
+      ..strokeWidth = 3.0;
+    canvas.drawCircle(gpsCenterPos, 12.0, borderRingPaint);
 
-    // Vehicle GPS Position & Radar Pulse Beacon
-    final vehiclePos = Offset(size.width * 0.45, size.height * 0.55);
+    // Center deep emerald live GPS dot
+    final gpsDotPaint = Paint()..color = AppTheme.primaryGreen;
+    canvas.drawCircle(gpsCenterPos, 6.0, gpsDotPaint);
 
-    // Radar pulse wave
-    final waveRadius = 14.0 + (pulseVal * 32.0);
-    final wavePaint = Paint()
-      ..color = AppTheme.accentNeon.withValues(alpha: (1.0 - pulseVal).clamp(0.0, 1.0) * 0.6)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-    canvas.drawCircle(vehiclePos, waveRadius, wavePaint);
-
-    // Center vehicle marker
-    final vehiclePaint = Paint()..color = const Color(0xFF00FF87);
-    canvas.drawCircle(vehiclePos, 8.0, vehiclePaint);
-    final innerPaint = Paint()..color = isDark ? const Color(0xFF141315) : Colors.white;
-    canvas.drawCircle(vehiclePos, 4.0, innerPaint);
-
-    // Waypoint Landmark Markers
+    // 7. Waypoint Landmark Markers
     _drawMarker(canvas, Offset(size.width * 0.25, size.height * 0.82), 'Lalbagh Fort', isDark);
     _drawMarker(canvas, Offset(size.width * 0.70, size.height * 0.38), 'Padma Overlook', isDark);
     _drawMarker(canvas, Offset(size.width * 0.85, size.height * 0.22), 'Meghna Ghat', isDark);

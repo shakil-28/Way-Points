@@ -6,7 +6,7 @@ import '../../../core/utils/time_utils.dart';
 import '../controllers/navigation_controller.dart';
 import '../models/maneuver_model.dart';
 
-/// PRD Screen 6: Floating Turn Maneuver Card with Speed Limit Badge, Road Hazard Picker Control, and Telemetry
+/// Simplified & Clean Navigation Top HUD Card with Maneuver Instruction, Speedometer, Distance/ETA, and Exit Action
 class NavigationOverlayView extends StatelessWidget {
   final NavigationController? controller;
   final VoidCallback onExit;
@@ -28,48 +28,49 @@ class NavigationOverlayView extends StatelessWidget {
       builder: (context, _) {
         final maneuver = navCtrl.currentManeuver;
 
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Top Maneuver HUD Card
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1B1A1E) : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.22),
-                    blurRadius: 20,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1B1A1E) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
               ),
-              child: Row(
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Top Row: Maneuver Icon, Instruction & Speedometer
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Maneuver Icon
+                  // Maneuver Turn Direction Icon
                   Container(
-                    width: 52,
-                    height: 52,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
                       color: AppTheme.primaryGreen,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppTheme.accentNeon, width: 2),
+                      border: Border.all(color: AppTheme.accentNeon, width: 1.5),
                     ),
                     child: Icon(
                       _getTurnIcon(maneuver.direction),
                       color: Colors.white,
-                      size: 32,
+                      size: 28,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
 
-                  // Distance & Instruction
+                  // Distance Countdown & Next Turn Instruction
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,15 +81,16 @@ class NavigationOverlayView extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.2,
-                            color: AppTheme.accentNeon,
+                            color: AppTheme.primaryGreen,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           maneuver.instruction,
-                          style: const TextStyle(
-                            fontSize: 15,
+                          style: TextStyle(
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -99,12 +101,12 @@ class NavigationOverlayView extends StatelessWidget {
 
                   const SizedBox(width: 8),
 
-                  // Speedometer & Speed Limit Badge Row
+                  // Speedometer & Speed Limit Badge Column
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      // Current Speed readout
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: isDark ? AppTheme.darkCard : AppTheme.lightCanvas,
                           borderRadius: BorderRadius.circular(10),
@@ -119,7 +121,7 @@ class NavigationOverlayView extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: AppTheme.accentNeon,
+                                color: AppTheme.primaryGreen,
                               ),
                             ),
                             const Text(
@@ -131,11 +133,11 @@ class NavigationOverlayView extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
 
-                      // Speed Limit Badge (PRD Screen 6)
+                      // Speed Limit Badge
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade900.withValues(alpha: 0.2),
+                          color: Colors.red.shade900.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(color: Colors.redAccent, width: 1.2),
                         ),
@@ -152,144 +154,47 @@ class NavigationOverlayView extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
 
-            const SizedBox(height: 8),
+              const SizedBox(height: 10),
+              Divider(height: 1, color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+              const SizedBox(height: 8),
 
-            // Bottom Trip Telemetry & Quick Hazard Control Capsule
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1B1A1E) : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
+              // Bottom Row: Duration Left, Distance Left & Exit Action Button
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // ETA, Distance, & Battery/Signal metrics
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
                     children: [
                       Text(
                         TimeUtils.formatMinutes(navCtrl.remainingTimeMinutes),
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
                       ),
-                      Row(
-                        children: [
-                          Text(
-                            '${navCtrl.remainingDistanceKm.toStringAsFixed(1)} km left',
-                            style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.black45),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(Symbols.battery_charging_90, size: 12, color: AppTheme.accentNeon),
-                          const SizedBox(width: 2),
-                          const Text('92%', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                          const SizedBox(width: 6),
-                          const Icon(Symbols.signal_cellular_4_bar, size: 12, color: AppTheme.accentNeon),
-                          const Text(' 5G', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                        ],
+                      const SizedBox(width: 8),
+                      Text(
+                        '•  ${navCtrl.remainingDistanceKm.toStringAsFixed(1)} km left',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white70 : const Color(0xFF475569),
+                        ),
                       ),
                     ],
                   ),
 
-                  // Actions: Report Hazard / Mute / Exit
-                  Row(
-                    children: [
-                      // Hazard Report Picker Button (PRD Screen 6)
-                      IconButton(
-                        icon: const Icon(Symbols.report_problem, color: Colors.amber, size: 20),
-                        tooltip: 'Report Hazard / Police',
-                        onPressed: () => _showHazardReportSheet(context, isDark),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          navCtrl.isMuted ? Symbols.volume_off : Symbols.volume_up,
-                          color: navCtrl.isMuted ? Colors.red : AppTheme.accentNeon,
-                          size: 20,
-                        ),
-                        onPressed: navCtrl.toggleMute,
-                      ),
-                      IconButton(
-                        icon: const Icon(Symbols.close, color: Colors.redAccent, size: 20),
-                        onPressed: onExit,
-                      ),
-                    ],
+                  // Exit Navigation Button
+                  IconButton(
+                    icon: const Icon(Symbols.close, color: Colors.redAccent, size: 20),
+                    tooltip: 'Exit Navigation',
+                    constraints: const BoxConstraints(),
+                    padding: const EdgeInsets.all(4),
+                    onPressed: onExit,
                   ),
                 ],
               ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showHazardReportSheet(BuildContext context, bool isDark) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: isDark ? AppTheme.darkCard : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        final hazards = [
-          {'title': 'Police Checkpoint', 'icon': Symbols.local_police, 'color': Colors.blue},
-          {'title': 'Heavy Traffic Congestion', 'icon': Symbols.traffic, 'color': Colors.amber},
-          {'title': 'Road Construction / Detour', 'icon': Symbols.construction, 'color': Colors.orange},
-          {'title': 'Accident / Vehicle Breakdown', 'icon': Symbols.car_crash, 'color': Colors.redAccent},
-        ];
-
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'REPORT HIGHWAY HAZARD',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.1,
-                  color: isDark ? Colors.white54 : Colors.black54,
-                ),
-              ),
-              const SizedBox(height: 14),
-              ...hazards.map((h) {
-                return Material(
-                  color: Colors.transparent,
-                  child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    backgroundColor: (h['color'] as Color).withValues(alpha: 0.15),
-                    child: Icon(h['icon'] as IconData, color: h['color'] as Color, size: 20),
-                  ),
-                  title: Text(h['title'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  trailing: const Icon(Symbols.arrow_forward_ios, size: 14),
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Reported "${h['title']}" to WayPoint corridor drivers!'),
-                        backgroundColor: AppTheme.primaryGreen,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                  ),
-                );
-              }),
             ],
           ),
         );

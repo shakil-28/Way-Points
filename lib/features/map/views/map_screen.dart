@@ -7,6 +7,7 @@ import '../controllers/map_controller.dart';
 import '../models/map_state_model.dart';
 import '../../discovery/controllers/discovery_controller.dart';
 import '../../discovery/views/poi_details_sheet.dart';
+import '../../routing/controllers/routing_controller.dart';
 import '../../routing/views/route_preview_view.dart';
 import '../../navigation/controllers/navigation_controller.dart';
 import '../../navigation/views/navigation_overlay_view.dart';
@@ -33,7 +34,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  bool _showPoiSheet = true;
+  bool _showPoiSheet = false; // Hidden by default in initial Explore mode
 
   @override
   Widget build(BuildContext context) {
@@ -238,7 +239,7 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
-            // Bottom Draggable Discovery Sheet
+            // Bottom Draggable Discovery Sheet (Only shown when a POI pin is tapped)
             if (_showPoiSheet)
               Positioned.fill(
                 child: PoiDetailsSheet(
@@ -381,7 +382,7 @@ class _MapScreenState extends State<MapScreen> {
           // 3. ACTIVE NAVIGATION MODE OVERLAYS
           // -------------------------------------------------------------------
           if (mode == MapScreenMode.navigation) ...[
-            // Top Turn Maneuver HUD Card
+            // Simplified Top Turn Maneuver & Telemetry HUD Card
             Positioned(
               top: topPadding + 10,
               left: 0,
@@ -394,9 +395,122 @@ class _MapScreenState extends State<MapScreen> {
                 },
               ),
             ),
+
+            // Right Floating Map Tool Controls (Hazard Report, Layers, Compass, Recenter)
+            Positioned(
+              right: 16,
+              top: topPadding + 150,
+              child: Column(
+                children: [
+                  // Hazard Report Button shifted to Right Floating Buttons
+                  _buildMapToolButton(
+                    icon: Symbols.report_problem,
+                    iconColor: Colors.amber,
+                    isDark: isDark,
+                    cardBackgroundColor: cardBackgroundColor,
+                    borderColor: borderColor,
+                    onTap: () => _showHazardReportSheet(context, isDark),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildMapToolButton(
+                    icon: Symbols.layers,
+                    isDark: isDark,
+                    cardBackgroundColor: cardBackgroundColor,
+                    borderColor: borderColor,
+                    onTap: () {
+                      final nextMode = controller.state.layerMode == MapLayerMode.satellite
+                          ? MapLayerMode.standard
+                          : MapLayerMode.satellite;
+                      controller.setLayerMode(nextMode);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildMapToolButton(
+                    icon: Symbols.explore,
+                    iconColor: AppTheme.primaryGreen,
+                    isDark: isDark,
+                    cardBackgroundColor: cardBackgroundColor,
+                    borderColor: borderColor,
+                    onTap: controller.zoomIn,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildMapToolButton(
+                    icon: Symbols.my_location,
+                    iconColor: AppTheme.primaryGreen,
+                    isDark: isDark,
+                    cardBackgroundColor: cardBackgroundColor,
+                    borderColor: borderColor,
+                    showActiveDot: true,
+                    onTap: controller.resetToDhakaCenter,
+                  ),
+                ],
+              ),
+            ),
           ],
         ],
       ),
+    );
+  }
+
+  void _showHazardReportSheet(BuildContext context, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppTheme.darkCard : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        final hazards = [
+          {'title': 'Police Checkpoint', 'icon': Symbols.local_police, 'color': Colors.blue},
+          {'title': 'Heavy Traffic Congestion', 'icon': Symbols.traffic, 'color': Colors.amber},
+          {'title': 'Road Construction / Detour', 'icon': Symbols.construction, 'color': Colors.orange},
+          {'title': 'Accident / Vehicle Breakdown', 'icon': Symbols.car_crash, 'color': Colors.redAccent},
+        ];
+
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'REPORT HIGHWAY HAZARD',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.1,
+                  color: isDark ? Colors.white54 : Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 14),
+              ...hazards.map((h) {
+                return Material(
+                  color: Colors.transparent,
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      backgroundColor: (h['color'] as Color).withValues(alpha: 0.15),
+                      child: Icon(h['icon'] as IconData, color: h['color'] as Color, size: 20),
+                    ),
+                    title: Text(h['title'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    trailing: const Icon(Symbols.arrow_forward_ios, size: 14),
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Reported "${h['title']}" to WayPoint corridor drivers!'),
+                          backgroundColor: AppTheme.primaryGreen,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
     );
   }
 

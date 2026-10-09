@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:provider/provider.dart';
+import '../../map/controllers/map_controller.dart';
 import '../../map/views/map_screen.dart';
 import '../../search/views/search_screen.dart';
 import '../../history/views/history_screen.dart';
@@ -9,7 +11,7 @@ import '../../settings/views/settings_screen.dart';
 
 /// Main shell with IndexedStack tab architecture + custom bottom nav bar.
 ///
-/// Tab order: Explore (map) | Search | History | Settings
+/// Tab order: Explore (map - 0) | Search (1) | History (2) | Settings (3)
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -18,7 +20,13 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 1; // Search is active by default in this design
+  int _currentIndex = 0; // Explore tab is active by default
+
+  void _switchTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,16 +36,30 @@ class _MainScreenState extends State<MainScreen> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          const MapScreen(),
-          SearchScreen(onPlaceSelected: (_) {}),
-          const HistoryScreen(),
+          MapScreen(
+            onSearchTap: () {
+              _switchTab(1); // Switch to Search Tab
+            },
+          ),
+          SearchScreen(
+            onPlaceSelected: (place) {
+              context.read<MapController>().showRoutePreview();
+              _switchTab(0); // Automatically navigate to Explore (Map) Tab
+            },
+          ),
+          HistoryScreen(
+            onReplayTrip: (trip) {
+              context.read<MapController>().showRoutePreview();
+              _switchTab(0); // Navigate to Explore (Map) Tab
+            },
+          ),
           const SettingsScreen(),
         ],
       ),
       bottomNavigationBar: WayPointBottomNavBar(
         currentIndex: _currentIndex,
         isDark: Theme.of(context).brightness == Brightness.dark,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: _switchTab,
       ),
     );
   }
@@ -155,10 +177,10 @@ class _NavItem extends StatelessWidget {
     required this.isDark,
     required this.onTap,
   });
+
   static const Color _activeColor = Color(0xFF025939);
   static const Color _inactiveColor = Color(0xFF64748B);
   static const Color _darkInactiveColor = Color(0xFF94A3B8);
-
 
   @override
   Widget build(BuildContext context) {
@@ -211,11 +233,11 @@ class _NavItem extends StatelessWidget {
                         shape: BoxShape.circle,
                         boxShadow: isSelected
                             ? [
-                                BoxShadow(
-                                  color: _activeColor.withValues(alpha: isDark ? 0.4 : 0.20),
-                                  blurRadius: 3,
-                                ),
-                              ]
+                          BoxShadow(
+                            color: _activeColor.withValues(alpha: isDark ? 0.4 : 0.20),
+                            blurRadius: 3,
+                          ),
+                        ]
                             : null,
                       ),
                     ),

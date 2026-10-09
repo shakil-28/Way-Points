@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
-import '../../../core/config/app_routes.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../map/controllers/map_controller.dart';
 import '../controllers/place_search_controller.dart';
 import '../models/place_model.dart';
 import 'search_view.dart';
 
-/// Screen 4: Search & Autocomplete Screen with no top header bar
+/// Screen 4: Search & Autocomplete Screen with automatic navigation to Explore Map upon place selection
 class SearchScreen extends StatefulWidget {
   final PlaceSearchController? controller;
   final ValueChanged<PlaceModel>? onPlaceSelected;
@@ -25,9 +23,11 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  void _navigateToMapRoutePreview(BuildContext context) {
+  void _selectPlaceAndNavigate(BuildContext context, PlaceModel place) {
     context.read<MapController>().showRoutePreview();
-    context.go(AppRoutes.map);
+    if (widget.onPlaceSelected != null) {
+      widget.onPlaceSelected!(place);
+    }
   }
 
   @override
@@ -53,7 +53,10 @@ class _SearchScreenState extends State<SearchScreen> {
               // Search Input & Quick Filter Chips
               SearchView(
                 controller: searchController,
-                onBackTap: () => context.go(AppRoutes.map),
+                onBackTap: () {
+                  final first = searchController.results.first;
+                  _selectPlaceAndNavigate(context, first);
+                },
               ),
 
               const SizedBox(height: 16),
@@ -85,10 +88,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       secondaryTextColor: secondaryTextColor,
                       onTap: () {
                         final place = searchController.results.first;
-                        if (widget.onPlaceSelected != null) {
-                          widget.onPlaceSelected!(place);
-                        }
-                        _navigateToMapRoutePreview(context);
+                        _selectPlaceAndNavigate(context, place);
                       },
                     ),
                     Divider(height: 1, color: borderColor),
@@ -101,7 +101,12 @@ class _SearchScreenState extends State<SearchScreen> {
                       isDark: isDark,
                       primaryTextColor: primaryTextColor,
                       secondaryTextColor: secondaryTextColor,
-                      onTap: () => _navigateToMapRoutePreview(context),
+                      onTap: () {
+                        final place = searchController.results.length > 1
+                            ? searchController.results[1]
+                            : searchController.results.first;
+                        _selectPlaceAndNavigate(context, place);
+                      },
                     ),
                     Divider(height: 1, color: borderColor),
                     _buildSuggestionItem(
@@ -113,7 +118,12 @@ class _SearchScreenState extends State<SearchScreen> {
                       isDark: isDark,
                       primaryTextColor: primaryTextColor,
                       secondaryTextColor: secondaryTextColor,
-                      onTap: () => _navigateToMapRoutePreview(context),
+                      onTap: () {
+                        final place = searchController.results.length > 2
+                            ? searchController.results[2]
+                            : searchController.results.first;
+                        _selectPlaceAndNavigate(context, place);
+                      },
                     ),
                   ],
                 ),
@@ -123,7 +133,10 @@ class _SearchScreenState extends State<SearchScreen> {
 
               // Curated Visual Mini-Banner ("Explore Lalbagh Gardens")
               GestureDetector(
-                onTap: () => _navigateToMapRoutePreview(context),
+                onTap: () {
+                  final place = searchController.results.first;
+                  _selectPlaceAndNavigate(context, place);
+                },
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
@@ -245,7 +258,10 @@ class _SearchScreenState extends State<SearchScreen> {
                     borderColor: borderColor,
                     primaryTextColor: primaryTextColor,
                     secondaryTextColor: secondaryTextColor,
-                    onTap: () => _navigateToMapRoutePreview(context),
+                    onTap: () {
+                      final place = searchController.results.first;
+                      _selectPlaceAndNavigate(context, place);
+                    },
                   ),
                   const SizedBox(height: 8),
                   _buildRecentTripTile(
@@ -257,7 +273,10 @@ class _SearchScreenState extends State<SearchScreen> {
                     borderColor: borderColor,
                     primaryTextColor: primaryTextColor,
                     secondaryTextColor: secondaryTextColor,
-                    onTap: () => _navigateToMapRoutePreview(context),
+                    onTap: () {
+                      final place = searchController.results.first;
+                      _selectPlaceAndNavigate(context, place);
+                    },
                   ),
                   const SizedBox(height: 8),
                   _buildRecentTripTile(
@@ -269,7 +288,10 @@ class _SearchScreenState extends State<SearchScreen> {
                     borderColor: borderColor,
                     primaryTextColor: primaryTextColor,
                     secondaryTextColor: secondaryTextColor,
-                    onTap: () => _navigateToMapRoutePreview(context),
+                    onTap: () {
+                      final place = searchController.results.first;
+                      _selectPlaceAndNavigate(context, place);
+                    },
                   ),
                 ],
               ),
