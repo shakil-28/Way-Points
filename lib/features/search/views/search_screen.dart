@@ -4,11 +4,12 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import '../../../core/config/app_routes.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../map/controllers/map_controller.dart';
 import '../controllers/place_search_controller.dart';
 import '../models/place_model.dart';
 import 'search_view.dart';
 
-/// Screen 4: Search & Autocomplete Screen designed precisely according to HTML Specification
+/// Screen 4: Search & Autocomplete Screen with no top header bar
 class SearchScreen extends StatefulWidget {
   final PlaceSearchController? controller;
   final ValueChanged<PlaceModel>? onPlaceSelected;
@@ -24,6 +25,11 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  void _navigateToMapRoutePreview(BuildContext context) {
+    context.read<MapController>().showRoutePreview();
+    context.go(AppRoutes.map);
+  }
+
   @override
   Widget build(BuildContext context) {
     final searchController = widget.controller ?? context.watch<PlaceSearchController>();
@@ -81,9 +87,8 @@ class _SearchScreenState extends State<SearchScreen> {
                         final place = searchController.results.first;
                         if (widget.onPlaceSelected != null) {
                           widget.onPlaceSelected!(place);
-                        } else {
-                          context.push(AppRoutes.routePreview);
                         }
+                        _navigateToMapRoutePreview(context);
                       },
                     ),
                     Divider(height: 1, color: borderColor),
@@ -96,7 +101,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       isDark: isDark,
                       primaryTextColor: primaryTextColor,
                       secondaryTextColor: secondaryTextColor,
-                      onTap: () => context.push(AppRoutes.routePreview),
+                      onTap: () => _navigateToMapRoutePreview(context),
                     ),
                     Divider(height: 1, color: borderColor),
                     _buildSuggestionItem(
@@ -108,7 +113,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       isDark: isDark,
                       primaryTextColor: primaryTextColor,
                       secondaryTextColor: secondaryTextColor,
-                      onTap: () => context.push(AppRoutes.routePreview),
+                      onTap: () => _navigateToMapRoutePreview(context),
                     ),
                   ],
                 ),
@@ -117,74 +122,77 @@ class _SearchScreenState extends State<SearchScreen> {
               const SizedBox(height: 16),
 
               // Curated Visual Mini-Banner ("Explore Lalbagh Gardens")
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: isDark ? AppTheme.darkCard : const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: borderColor),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                      blurRadius: 12,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Row(
-                            children: [
-                              CircleAvatar(radius: 3, backgroundColor: AppTheme.primaryGreen),
-                              SizedBox(width: 6),
-                              Text(
-                                'MUGHAL HERITAGE CORRIDOR',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.8,
-                                  color: AppTheme.primaryGreen,
+              GestureDetector(
+                onTap: () => _navigateToMapRoutePreview(context),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppTheme.darkCard : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: borderColor),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                        blurRadius: 12,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                CircleAvatar(radius: 3, backgroundColor: AppTheme.primaryGreen),
+                                SizedBox(width: 6),
+                                Text(
+                                  'MUGHAL HERITAGE CORRIDOR',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.8,
+                                    color: AppTheme.primaryGreen,
+                                  ),
                                 ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Explore Lalbagh Gardens',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: primaryTextColor,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Explore Lalbagh Gardens',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: primaryTextColor,
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'South gate pedestrian route open today',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: secondaryTextColor,
+                            const SizedBox(height: 2),
+                            Text(
+                              'South gate pedestrian route open today',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: secondaryTextColor,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        'https://images.unsplash.com/photo-1588416936097-41850ab3d86d?w=400',
-                        width: 72,
-                        height: 72,
-                        fit: BoxFit.cover,
+                      const SizedBox(width: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          'https://images.unsplash.com/photo-1588416936097-41850ab3d86d?w=400',
+                          width: 72,
+                          height: 72,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
@@ -237,7 +245,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     borderColor: borderColor,
                     primaryTextColor: primaryTextColor,
                     secondaryTextColor: secondaryTextColor,
-                    onTap: () => context.push(AppRoutes.routePreview),
+                    onTap: () => _navigateToMapRoutePreview(context),
                   ),
                   const SizedBox(height: 8),
                   _buildRecentTripTile(
@@ -249,7 +257,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     borderColor: borderColor,
                     primaryTextColor: primaryTextColor,
                     secondaryTextColor: secondaryTextColor,
-                    onTap: () => context.push(AppRoutes.routePreview),
+                    onTap: () => _navigateToMapRoutePreview(context),
                   ),
                   const SizedBox(height: 8),
                   _buildRecentTripTile(
@@ -261,7 +269,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     borderColor: borderColor,
                     primaryTextColor: primaryTextColor,
                     secondaryTextColor: secondaryTextColor,
-                    onTap: () => context.push(AppRoutes.routePreview),
+                    onTap: () => _navigateToMapRoutePreview(context),
                   ),
                 ],
               ),
@@ -290,49 +298,49 @@ class _SearchScreenState extends State<SearchScreen> {
       child: ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      leading: CircleAvatar(
-        radius: 18,
-        backgroundColor: isHighlighted ? const Color(0xFFE6F7F0) : (isDark ? AppTheme.darkCanvas : const Color(0xFFF1F5F9)),
-        child: Icon(
-          Symbols.location_on,
-          size: 18,
-          color: isHighlighted ? AppTheme.primaryGreen : secondaryTextColor,
+        leading: CircleAvatar(
+          radius: 18,
+          backgroundColor: isHighlighted ? const Color(0xFFE6F7F0) : (isDark ? AppTheme.darkCanvas : const Color(0xFFF1F5F9)),
+          child: Icon(
+            Symbols.location_on,
+            size: 18,
+            color: isHighlighted ? AppTheme.primaryGreen : secondaryTextColor,
+          ),
         ),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w600,
-          color: primaryTextColor,
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w600,
+            color: primaryTextColor,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(fontSize: 12, color: secondaryTextColor),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            distance,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: isHighlighted ? AppTheme.primaryGreen : primaryTextColor,
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(fontSize: 12, color: secondaryTextColor),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              distance,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isHighlighted ? AppTheme.primaryGreen : primaryTextColor,
+              ),
             ),
-          ),
-          Text(
-            duration,
-            style: TextStyle(fontSize: 11, color: secondaryTextColor),
-          ),
-        ],
-      ),
+            Text(
+              duration,
+              style: TextStyle(fontSize: 11, color: secondaryTextColor),
+            ),
+          ],
+        ),
       ),
     );
   }

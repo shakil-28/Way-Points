@@ -35,7 +35,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
     final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF475569);
-    final borderColor = isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0);
 
     return Scaffold(
       body: SafeArea(

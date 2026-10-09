@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../theme/app_theme.dart';
-import '../widgets/waypoint_logo.dart';
 
-/// Shared top header used across Navigation, Settings, and History screens.
-///
-/// Layout (left to right):
-///   [back button]  [WayPointLogo + title]  [profile button]
 class ContextHeader extends StatelessWidget {
   final String title;
   final bool isDark;
