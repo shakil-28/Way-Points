@@ -7,14 +7,13 @@ import '../controllers/map_controller.dart';
 import '../models/map_state_model.dart';
 import '../../discovery/controllers/discovery_controller.dart';
 import '../../discovery/views/poi_details_sheet.dart';
-import '../../routing/controllers/routing_controller.dart';
 import '../../routing/views/route_preview_view.dart';
 import '../../navigation/controllers/navigation_controller.dart';
 import '../../navigation/views/navigation_overlay_view.dart';
 import '../../../core/config/app_routes.dart';
 import 'map_view.dart';
 
-/// Screen 3 & Core Navigation Hub: Home Explore Map rendering full screen without top header bars
+/// Screen 3 & Core Navigation Hub: Home Explore Map with floating map controls positioned on the lower right
 class MapScreen extends StatefulWidget {
   final MapController? mapController;
   final VoidCallback? onSearchTap;
@@ -138,10 +137,10 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
-            // Right Floating Tool Controls (Layers, Compass, Recenter)
+            // Lower Right Floating Tool Controls (Layers, Compass, Recenter)
             Positioned(
               right: 16,
-              top: topPadding + 80,
+              bottom: 280,
               child: Column(
                 children: [
                   _buildMapToolButton(
@@ -182,7 +181,7 @@ class _MapScreenState extends State<MapScreen> {
             // Speed & Live Corridor Status Badge (Bottom Left)
             Positioned(
               left: 16,
-              bottom: _showPoiSheet ? 260 : 30,
+              bottom: _showPoiSheet ? 280 : 100,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
@@ -331,7 +330,7 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
-            // Right Floating Map Tool Controls (Recenter, Layers)
+            // Lower Right Floating Map Tool Controls (Recenter, Layers)
             Positioned(
               right: 16,
               bottom: 280,
@@ -396,13 +395,13 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
-            // Right Floating Map Tool Controls (Hazard Report, Layers, Compass, Recenter)
+            // Lower Right Floating Map Tool Controls (Hazard Report, Layers, Compass, Recenter)
             Positioned(
               right: 16,
-              top: topPadding + 150,
+              bottom: 280,
               child: Column(
                 children: [
-                  // Hazard Report Button shifted to Right Floating Buttons
+                  // Hazard Report Button
                   _buildMapToolButton(
                     icon: Symbols.report_problem,
                     iconColor: Colors.amber,
