@@ -7,7 +7,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/waypoint_logo.dart';
 import '../controllers/auth_controller.dart';
 
-/// Screen 1: Login & Sign-In Screen styled precisely according to HTML Design Specification
+/// Driver sign-in and authentication view with email/password input, SSO login buttons,
+/// and navigation to account registration or profile setup.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -35,9 +36,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final bgBackgroundColor = isDark ? AppTheme.darkCanvas : const Color(0xFFF8FAFC);
     final cardBackgroundColor = isDark ? AppTheme.darkCard : Colors.white;
-    final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final primaryTextColor = isDark ? Colors.white : AppTheme.textPrimary;
     final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF475569);
-    final borderColor = isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0);
+    final borderColor = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
 
     return Scaffold(
       backgroundColor: bgBackgroundColor,

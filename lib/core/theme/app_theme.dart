@@ -15,6 +15,10 @@ class AppTheme {
   static const Color lightCard = Color(0xFFFFFFFF);
   static const Color lightBorder = Color(0xFFE2E8F0);
 
+  // Typography & Border Palette
+  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textSecondary = Color(0xFF64748B);
+
   // Dark Theme
   static ThemeData get darkTheme {
     return ThemeData(
@@ -73,18 +77,18 @@ class AppTheme {
       textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme).copyWith(
         displayLarge: GoogleFonts.plusJakartaSans(
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF0F172A),
+          color: textPrimary,
         ),
         titleLarge: GoogleFonts.plusJakartaSans(
           fontWeight: FontWeight.w600,
-          color: const Color(0xFF0F172A),
+          color: textPrimary,
         ),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: lightCanvas,
         elevation: 0,
         centerTitle: false,
-        iconTheme: IconThemeData(color: Color(0xFF0F172A)),
+        iconTheme: IconThemeData(color: textPrimary),
       ),
       cardTheme: CardThemeData(
         color: lightCard,

@@ -8,6 +8,7 @@ class NavigationPoiBadge extends StatelessWidget {
   final Color iconColor;
   final bool showPulse;
   final bool isDark;
+  final VoidCallback? onTap;
 
   const NavigationPoiBadge({
     super.key,
@@ -16,55 +17,61 @@ class NavigationPoiBadge extends StatelessWidget {
     required this.iconColor,
     this.showPulse = false,
     required this.isDark,
+    this.onTap,
   });
 
   static const Color emerald = AppTheme.primaryGreen;
-  static const Color borderColor = Color(0xFFE2E8F0);
+  static const Color borderColor = AppTheme.lightBorder;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: (isDark ? AppTheme.darkCard : Colors.white).withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: (isDark ? AppTheme.darkBorder : borderColor).withValues(alpha: 0.9),
-          ),
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.10),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+      borderRadius: BorderRadius.circular(30),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(30),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: (isDark ? AppTheme.darkCard : Colors.white).withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: (isDark ? AppTheme.darkBorder : borderColor).withValues(alpha: 0.9),
             ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            if (showPulse) ...<Widget>[
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  color: emerald,
-                  shape: BoxShape.circle,
-                ),
-                child: SizedBox(width: 8, height: 8),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.10),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              const SizedBox(width: 6),
             ],
-            Icon(icon, size: 18, color: iconColor),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : const Color(0xFF1E293B),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              if (showPulse) ...<Widget>[
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: emerald,
+                    shape: BoxShape.circle,
+                  ),
+                  child: SizedBox(width: 8, height: 8),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Icon(icon, size: 18, color: iconColor),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

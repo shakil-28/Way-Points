@@ -6,7 +6,8 @@ import '../../../core/config/app_routes.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/auth_controller.dart';
 
-/// Screen 2: "Complete Profile" (Step 2 of 2) designed precisely according to Design Mockup
+/// Driver profile configuration screen (Step 2 of 2) for specifying driver photo, preferred vehicle type,
+/// speed measurement units, and navigation preferences.
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
 
@@ -34,9 +35,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
     final bgBackgroundColor = isDark ? AppTheme.darkCanvas : const Color(0xFFF8FAFC);
     final cardBackgroundColor = isDark ? AppTheme.darkCard : Colors.white;
-    final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final primaryTextColor = isDark ? Colors.white : AppTheme.textPrimary;
     final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF475569);
-    final borderColor = isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0);
+    final borderColor = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
 
     return Scaffold(
       backgroundColor: bgBackgroundColor,

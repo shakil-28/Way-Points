@@ -8,7 +8,8 @@ import '../../../core/utils/time_utils.dart';
 import '../controllers/history_controller.dart';
 import '../models/search_history_model.dart';
 
-/// Redesigned Travel History & Expedition Analytics Screen with native custom diagram charts
+/// Travel history and expedition analytics view rendering custom bar and donut charts
+/// for fuel efficiency, distance traveled, and past trip replay.
 class HistoryScreen extends StatefulWidget {
   final HistoryController? controller;
   final ValueChanged<SearchHistoryModel>? onReplayTrip;
@@ -40,9 +41,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     final cardBackgroundColor = isDark ? AppTheme.darkCard : Colors.white;
-    final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF64748B);
-    final borderColor = isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0);
+    final primaryTextColor = isDark ? Colors.white : AppTheme.textPrimary;
+    final secondaryTextColor = isDark ? Colors.white60 : AppTheme.textSecondary;
+    final borderColor = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
 
     final filteredTrips = histCtrl.trips.where((t) {
       if (_selectedFilter == 'All Trips') return true;

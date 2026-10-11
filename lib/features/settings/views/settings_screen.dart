@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/context_header.dart';
 import '../controllers/settings_controller.dart';
 import '../models/settings_model.dart';
 
+/// Application settings and preferences screen allowing configuration of speed measurement units (km/h vs mph),
+/// audio guidance, map layers, theme modes, and user driver profile options.
 class SettingsScreen extends StatefulWidget {
   final SettingsController? controller;
 
@@ -232,7 +235,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         onBack: () => Navigator.of(context).maybePop(),
         onProfile: () => ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Profile setup accessible from main menu.'),
+            content: Text(AppStrings.profileNotAvailable),
             behavior: SnackBarBehavior.floating,
           ),
         ),
@@ -953,7 +956,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _proBadge() => const _ProBadge();
   Widget _onlineDot({required bool isDark}) => _OnlineDot(isDark: isDark);
 }
 

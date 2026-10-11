@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/circular_floating_button.dart';
 import '../controllers/map_controller.dart';
 import '../models/map_state_model.dart';
 import '../../discovery/controllers/discovery_controller.dart';
@@ -10,6 +12,8 @@ import '../../discovery/views/poi_details_sheet.dart';
 import '../../routing/views/route_preview_view.dart';
 import '../../navigation/controllers/navigation_controller.dart';
 import '../../navigation/views/navigation_overlay_view.dart';
+import '../../navigation/views/navigation_bottom_sheet.dart';
+import '../../navigation/views/navigation_poi_badge.dart';
 import '../../../core/config/app_routes.dart';
 import 'map_view.dart';
 
@@ -34,6 +38,46 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   bool _showPoiSheet = false; // Hidden by default in initial Explore mode
+  bool _showNavSheet = false; // Hidden by default in Navigation mode until POI is tapped
+
+  final DraggableScrollableController _navSheetController = DraggableScrollableController();
+  final ValueNotifier<int> _navSnapIndex = ValueNotifier<int>(0);
+  static const List<double> _navSnapSizes = <double>[0.25, 0.50, 0.80];
+
+  @override
+  void initState() {
+    super.initState();
+    _navSheetController.addListener(_handleNavSheetChanged);
+  }
+
+  @override
+  void dispose() {
+    _navSheetController.removeListener(_handleNavSheetChanged);
+    _navSheetController.dispose();
+    _navSnapIndex.dispose();
+    super.dispose();
+  }
+
+  void _handleNavSheetChanged() {
+    if (!_navSheetController.isAttached) return;
+
+    final double extent = _navSheetController.size;
+
+    int closestIndex = 0;
+    double smallestDistance = double.infinity;
+
+    for (int i = 0; i < _navSnapSizes.length; i++) {
+      final double distance = (extent - _navSnapSizes[i]).abs();
+      if (distance < smallestDistance) {
+        smallestDistance = distance;
+        closestIndex = i;
+      }
+    }
+
+    if (_navSnapIndex.value != closestIndex) {
+      _navSnapIndex.value = closestIndex; // Dynamically switches UI between 0.25, 0.50, and 0.80!
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,9 +91,9 @@ class _MapScreenState extends State<MapScreen> {
     final topPadding = MediaQuery.of(context).padding.top;
 
     final cardBackgroundColor = isDark ? AppTheme.darkCard : Colors.white;
-    final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final primaryTextColor = isDark ? Colors.white : AppTheme.textPrimary;
     final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF475569);
-    final borderColor = isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0);
+    final borderColor = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
 
     return Scaffold(
       body: Stack(
@@ -64,7 +108,11 @@ class _MapScreenState extends State<MapScreen> {
                 controller.selectPoi(poiId);
                 discoveryCtrl.selectPoiById(poiId);
                 setState(() {
-                  _showPoiSheet = true;
+                  if (mode == MapScreenMode.navigation) {
+                    _showNavSheet = true; // Activate Navigation Dashboard Sheet
+                  } else {
+                    _showPoiSheet = true;
+                  }
                 });
               },
             ),
@@ -102,7 +150,7 @@ class _MapScreenState extends State<MapScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Where to in Dhaka?',
+                          AppStrings.whereToQuestion,
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
@@ -140,14 +188,12 @@ class _MapScreenState extends State<MapScreen> {
             // Lower Right Floating Tool Controls (Layers, Compass, Recenter)
             Positioned(
               right: 16,
-              bottom: 280,
+              bottom: _showPoiSheet ? 280 : 100,
               child: Column(
                 children: [
-                  _buildMapToolButton(
+                  CircularFloatingButton(
                     icon: Symbols.layers,
                     isDark: isDark,
-                    cardBackgroundColor: cardBackgroundColor,
-                    borderColor: borderColor,
                     onTap: () {
                       final nextMode = controller.state.layerMode == MapLayerMode.satellite
                           ? MapLayerMode.standard
@@ -156,21 +202,17 @@ class _MapScreenState extends State<MapScreen> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  _buildMapToolButton(
+                  CircularFloatingButton(
                     icon: Symbols.explore,
                     iconColor: AppTheme.primaryGreen,
                     isDark: isDark,
-                    cardBackgroundColor: cardBackgroundColor,
-                    borderColor: borderColor,
                     onTap: controller.zoomIn,
                   ),
                   const SizedBox(height: 12),
-                  _buildMapToolButton(
+                  CircularFloatingButton(
                     icon: Symbols.my_location,
                     iconColor: AppTheme.primaryGreen,
                     isDark: isDark,
-                    cardBackgroundColor: cardBackgroundColor,
-                    borderColor: borderColor,
                     showActiveDot: true,
                     onTap: controller.resetToDhakaCenter,
                   ),
@@ -336,20 +378,16 @@ class _MapScreenState extends State<MapScreen> {
               bottom: 280,
               child: Column(
                 children: [
-                  _buildMapToolButton(
+                  CircularFloatingButton(
                     icon: Symbols.my_location,
                     iconColor: AppTheme.primaryGreen,
                     isDark: isDark,
-                    cardBackgroundColor: cardBackgroundColor,
-                    borderColor: borderColor,
                     onTap: controller.resetToDhakaCenter,
                   ),
                   const SizedBox(height: 12),
-                  _buildMapToolButton(
+                  CircularFloatingButton(
                     icon: Symbols.layers,
                     isDark: isDark,
-                    cardBackgroundColor: cardBackgroundColor,
-                    borderColor: borderColor,
                     onTap: () {
                       final nextMode = controller.state.layerMode == MapLayerMode.satellite
                           ? MapLayerMode.standard
@@ -371,6 +409,9 @@ class _MapScreenState extends State<MapScreen> {
                   if (!navCtrl.isNavigating) {
                     navCtrl.startNavigation();
                   }
+                  setState(() {
+                    _showNavSheet = false; // Initially inactive until POI is tapped
+                  });
                   controller.startNavigation();
                 },
               ),
@@ -390,7 +431,58 @@ class _MapScreenState extends State<MapScreen> {
                 controller: navCtrl,
                 onExit: () {
                   navCtrl.stopNavigation();
+                  setState(() {
+                    _showNavSheet = false;
+                  });
                   controller.showExplore();
+                },
+              ),
+            ),
+
+            // Interactive Corridor Testing POI Badges along route
+            Positioned(
+              top: topPadding + 150,
+              left: 16,
+              child: NavigationPoiBadge(
+                icon: Symbols.account_balance,
+                label: 'Savar Monument (+8m)',
+                iconColor: const Color(0xFF047857),
+                showPulse: true,
+                isDark: isDark,
+                onTap: () {
+                  setState(() {
+                    _showNavSheet = true; // Activate Navigation Dashboard Sheet
+                  });
+                },
+              ),
+            ),
+            Positioned(
+              top: topPadding + 210,
+              right: 16,
+              child: NavigationPoiBadge(
+                icon: Symbols.mosque,
+                label: 'Heritage Mosque (+5m)',
+                iconColor: const Color(0xFF0F766E),
+                isDark: isDark,
+                onTap: () {
+                  setState(() {
+                    _showNavSheet = true; // Activate Navigation Dashboard Sheet
+                  });
+                },
+              ),
+            ),
+            Positioned(
+              top: topPadding + 270,
+              left: 24,
+              child: NavigationPoiBadge(
+                icon: Symbols.park,
+                label: 'Bhawal Reserve (+12m)',
+                iconColor: const Color(0xFF15803D),
+                isDark: isDark,
+                onTap: () {
+                  setState(() {
+                    _showNavSheet = true; // Activate Navigation Dashboard Sheet
+                  });
                 },
               ),
             ),
@@ -398,24 +490,20 @@ class _MapScreenState extends State<MapScreen> {
             // Lower Right Floating Map Tool Controls (Hazard Report, Layers, Compass, Recenter)
             Positioned(
               right: 16,
-              bottom: 280,
+              bottom: _showNavSheet ? 280 : 100,
               child: Column(
                 children: [
                   // Hazard Report Button
-                  _buildMapToolButton(
+                  CircularFloatingButton(
                     icon: Symbols.report_problem,
                     iconColor: Colors.amber,
                     isDark: isDark,
-                    cardBackgroundColor: cardBackgroundColor,
-                    borderColor: borderColor,
                     onTap: () => _showHazardReportSheet(context, isDark),
                   ),
                   const SizedBox(height: 12),
-                  _buildMapToolButton(
+                  CircularFloatingButton(
                     icon: Symbols.layers,
                     isDark: isDark,
-                    cardBackgroundColor: cardBackgroundColor,
-                    borderColor: borderColor,
                     onTap: () {
                       final nextMode = controller.state.layerMode == MapLayerMode.satellite
                           ? MapLayerMode.standard
@@ -424,27 +512,60 @@ class _MapScreenState extends State<MapScreen> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  _buildMapToolButton(
+                  CircularFloatingButton(
                     icon: Symbols.explore,
                     iconColor: AppTheme.primaryGreen,
                     isDark: isDark,
-                    cardBackgroundColor: cardBackgroundColor,
-                    borderColor: borderColor,
                     onTap: controller.zoomIn,
                   ),
                   const SizedBox(height: 12),
-                  _buildMapToolButton(
+                  CircularFloatingButton(
                     icon: Symbols.my_location,
                     iconColor: AppTheme.primaryGreen,
                     isDark: isDark,
-                    cardBackgroundColor: cardBackgroundColor,
-                    borderColor: borderColor,
                     showActiveDot: true,
                     onTap: controller.resetToDhakaCenter,
                   ),
                 ],
               ),
             ),
+
+            // Bottom Draggable Navigation Dashboard Sheet (Active when POI is tapped)
+            if (_showNavSheet)
+              Positioned.fill(
+                child: DraggableScrollableSheet(
+                  controller: _navSheetController,
+                  initialChildSize: 0.25,
+                  minChildSize: 0.25,
+                  maxChildSize: 0.80,
+                  snap: true,
+                  snapSizes: _navSnapSizes,
+                  snapAnimationDuration: const Duration(milliseconds: 260),
+                  builder: (context, scrollController) {
+                    return NavigationBottomSheet(
+                      scrollController: scrollController,
+                      navCtrl: navCtrl,
+                      isDark: isDark,
+                      currentSnapIndexListenable: _navSnapIndex,
+                      snapSizes: _navSnapSizes,
+                      onPitStopAdd: (title) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('$title added to route. Corridor metrics updated.'),
+                            backgroundColor: AppTheme.primaryGreen,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      onConfirmExit: () {
+                        setState(() {
+                          _showNavSheet = false; // Hide sheet on exit
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
           ],
         ],
       ),
@@ -510,55 +631,6 @@ class _MapScreenState extends State<MapScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildMapToolButton({
-    required IconData icon,
-    required bool isDark,
-    required Color cardBackgroundColor,
-    required Color borderColor,
-    required VoidCallback onTap,
-    Color? iconColor,
-    bool showActiveDot = false,
-  }) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: cardBackgroundColor,
-        shape: BoxShape.circle,
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          IconButton(
-            icon: Icon(icon, size: 22, color: iconColor ?? (isDark ? Colors.white70 : const Color(0xFF1E293B))),
-            onPressed: onTap,
-          ),
-          if (showActiveDot)
-            Positioned(
-              top: 10,
-              right: 10,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1.5),
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }

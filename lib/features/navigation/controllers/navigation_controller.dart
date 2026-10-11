@@ -7,11 +7,11 @@ class NavigationController extends ChangeNotifier {
   static const List<ManeuverModel> sequence = [
     ManeuverModel(
       id: 'm1',
-      instruction: 'In 450 m, take the ramp onto Dhaka Elevated Expressway',
+      instruction: 'Take ramp onto Dhaka Elevated Expressway',
       streetName: 'Dhaka Elevated Expressway • South Gate',
       distanceMeters: 450,
       direction: TurnDirection.slightRight,
-      laneIndicator: 'Use right 2 lanes',
+      laneIndicator: 'Right 2 lanes',
       speedLimitKmh: 60.0,
     ),
     ManeuverModel(
@@ -20,7 +20,7 @@ class NavigationController extends ChangeNotifier {
       streetName: 'N1 Dhaka-Chattogram Highway',
       distanceMeters: 14200,
       direction: TurnDirection.straight,
-      laneIndicator: 'Stay on express flyover',
+      laneIndicator: 'Stay on flyover',
       speedLimitKmh: 80.0,
     ),
     ManeuverModel(
@@ -34,7 +34,7 @@ class NavigationController extends ChangeNotifier {
     ),
     ManeuverModel(
       id: 'm4',
-      instruction: 'You will arrive at Meghna Scenic River Overlook',
+      instruction: 'Arrive at Meghna Scenic River Overlook',
       streetName: 'Old Ferry Ghat Road',
       distanceMeters: 250,
       direction: TurnDirection.arrive,

@@ -6,7 +6,7 @@ import '../../../core/utils/time_utils.dart';
 import '../controllers/navigation_controller.dart';
 import '../models/maneuver_model.dart';
 
-/// Simplified & Clean Navigation Top HUD Card with Maneuver Instruction, Speedometer, Distance/ETA, and Exit Action
+/// Sleek, Compact, and Non-Clipping Navigation Top HUD Card
 class NavigationOverlayView extends StatelessWidget {
   final NavigationController? controller;
   final VoidCallback onExit;
@@ -16,6 +16,10 @@ class NavigationOverlayView extends StatelessWidget {
     this.controller,
     required this.onExit,
   });
+
+  String _cleanInstruction(String text) {
+    return text.replaceAll(RegExp(r'^In \d+\s*(meters|m|km),\s*', caseSensitive: false), '');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,173 +31,126 @@ class NavigationOverlayView extends StatelessWidget {
       animation: navCtrl,
       builder: (context, _) {
         final maneuver = navCtrl.currentManeuver;
+        final cleanText = _cleanInstruction(maneuver.instruction);
 
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1B1A1E) : Colors.white,
+            color: (isDark ? AppTheme.darkCard : Colors.white).withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
-              width: 1.5,
+              width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
-                blurRadius: 20,
-                offset: const Offset(0, 6),
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
             children: [
-              // Top Row: Maneuver Icon, Instruction & Speedometer
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Maneuver Turn Direction Icon
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppTheme.accentNeon, width: 1.5),
+              // Compact Turn Icon Badge
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryGreen,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
-                    child: Icon(
-                      _getTurnIcon(maneuver.direction),
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
+                  ],
+                ),
+                child: Icon(
+                  _getTurnIcon(maneuver.direction),
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 12),
 
-                  // Distance Countdown & Next Turn Instruction
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'IN ${maneuver.distanceMeters} METERS',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                            color: AppTheme.primaryGreen,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          maneuver.instruction,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  // Speedometer & Speed Limit Badge Column
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppTheme.darkCard : AppTheme.lightCanvas,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              '${navCtrl.currentSpeedKmh.round()}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryGreen,
-                              ),
-                            ),
-                            const Text(
-                              'km/h',
-                              style: TextStyle(fontSize: 8, color: Colors.grey),
-                            ),
-                          ],
-                        ),
+              // Distance Countdown & Clean Next Turn Instruction
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'IN ${maneuver.distanceMeters.round()} M',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                        color: AppTheme.primaryGreen,
                       ),
-                      const SizedBox(height: 4),
-
-                      // Speed Limit Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade900.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.redAccent, width: 1.2),
-                        ),
-                        child: Text(
-                          'LIMIT ${maneuver.speedLimitKmh.round()}',
-                          style: const TextStyle(
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.redAccent,
-                          ),
-                        ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      cleanText,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                        color: isDark ? Colors.white : AppTheme.textPrimary,
                       ),
-                    ],
-                  ),
-                ],
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
 
-              const SizedBox(height: 10),
-              Divider(height: 1, color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
-              const SizedBox(height: 8),
+              const SizedBox(width: 8),
 
-              // Bottom Row: Duration Left, Distance Left & Exit Action Button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        TimeUtils.formatMinutes(navCtrl.remainingTimeMinutes),
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '•  ${navCtrl.remainingDistanceKm.toStringAsFixed(1)} km left',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white70 : const Color(0xFF475569),
-                        ),
-                      ),
-                    ],
+              // Speed & Distance Summary Pill
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isDark ? AppTheme.darkCanvas : AppTheme.lightCanvas,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
                   ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${navCtrl.currentSpeedKmh.round()} km/h',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryGreen,
+                      ),
+                    ),
+                    Text(
+                      '${TimeUtils.formatMinutes(navCtrl.remainingTimeMinutes)} left',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isDark ? Colors.white60 : AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                  // Exit Navigation Button
-                  IconButton(
-                    icon: const Icon(Symbols.close, color: Colors.redAccent, size: 20),
-                    tooltip: 'Exit Navigation',
-                    constraints: const BoxConstraints(),
-                    padding: const EdgeInsets.all(4),
-                    onPressed: onExit,
-                  ),
-                ],
+              const SizedBox(width: 6),
+
+              // Exit Navigation Button
+              IconButton(
+                icon: const Icon(Symbols.close, color: Colors.redAccent, size: 20),
+                tooltip: 'Exit Navigation',
+                constraints: const BoxConstraints(),
+                padding: const EdgeInsets.all(4),
+                onPressed: onExit,
               ),
             ],
           ),

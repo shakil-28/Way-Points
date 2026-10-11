@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/context_header.dart';
 import '../../map/controllers/map_controller.dart';
@@ -14,7 +15,8 @@ import 'navigation_poi_badge.dart';
 import 'navigation_floating_controls.dart';
 import 'navigation_bottom_sheet.dart';
 
-/// Screen 7: Active Turn-by-Turn Navigation Screen Orchestrator
+/// Full-screen turn-by-turn navigation view with map, maneuver card, speed HUD,
+/// and draggable dashboard. Shown when an active navigation session exists.
 class ActiveNavigationScreen extends StatefulWidget {
   const ActiveNavigationScreen({super.key});
 
@@ -34,12 +36,12 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
   static const double _headerHeight = 54;
   static const double _maneuverGap = 12;
 
-  static const List<double> _snapSizes = <double>[0.10, 0.25, 0.50, 0.80];
+  static const List<double> _snapSizes = <double>[0.25, 0.50, 0.80];
 
   late final AnimationController _pulseController;
   final DraggableScrollableController _sheetController = DraggableScrollableController();
   final ValueNotifier<double> _sheetExtent = ValueNotifier<double>(0.25);
-  int _currentSnapIndex = 1;
+  final ValueNotifier<int> _currentSnapIndex = ValueNotifier<int>(1);
   bool _isCompassAnimating = false;
 
   @override
@@ -68,6 +70,7 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
     _sheetController.removeListener(_handleSheetChanged);
     _sheetController.dispose();
     _sheetExtent.dispose();
+    _currentSnapIndex.dispose();
     super.dispose();
   }
 
@@ -88,15 +91,15 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
       }
     }
 
-    if (closestIndex != _currentSnapIndex && smallestDistance < 0.04 && mounted) {
-      setState(() => _currentSnapIndex = closestIndex);
+    if (_currentSnapIndex.value != closestIndex && smallestDistance < 0.04) {
+      _currentSnapIndex.value = closestIndex; // Lightweight ValueNotifier - NO full screen rebuild!
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final navCtrl = context.watch<NavigationController>();
-    final mapCtrl = context.watch<MapController>();
+    final mapCtrl = context.read<MapController>();
+    final navCtrl = context.read<NavigationController>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -107,7 +110,7 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
         child: Stack(
           fit: StackFit.expand,
           children: <Widget>[
-            // 1. Vector Map Substrate & Route Overlay
+            // 1. Vector Map Substrate & Route Overlay (Isolated CustomPaint)
             Positioned.fill(
               child: NavigationMapView(
                 mapCtrl: mapCtrl,
@@ -154,12 +157,16 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
               ),
             ),
 
-            // 3. Maneuver HUD Card
+            // 3. Maneuver HUD Card (Targeted Consumer)
             Positioned(
               top: _headerTop + _headerHeight + _maneuverGap,
               left: 16,
               right: 16,
-              child: NavigationManeuverCard(navCtrl: navCtrl, isDark: isDark),
+              child: Consumer<NavigationController>(
+                builder: (context, navCtrl, _) {
+                  return NavigationManeuverCard(navCtrl: navCtrl, isDark: isDark);
+                },
+              ),
             ),
 
             // 4. POI Corridor Callout Badges
@@ -200,26 +207,34 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
                     child: child,
                   );
                 },
-                child: NavigationSpeedHud(navCtrl: navCtrl, isDark: isDark),
+                child: Consumer<NavigationController>(
+                  builder: (context, navCtrl, _) {
+                    return NavigationSpeedHud(navCtrl: navCtrl, isDark: isDark);
+                  },
+                ),
               ),
             ),
 
             Positioned(
               right: 16,
               bottom: 280,
-              child: NavigationFloatingControls(
-                navCtrl: navCtrl,
-                mapCtrl: mapCtrl,
-                isDark: isDark,
-                isCompassAnimating: _isCompassAnimating,
-                onCompassTap: () => _handleCompass(mapCtrl),
-                onMuteTap: () => _toggleMute(navCtrl),
-                onHazardTap: _showHazardDialog,
+              child: Consumer<NavigationController>(
+                builder: (context, navCtrl, _) {
+                  return NavigationFloatingControls(
+                    navCtrl: navCtrl,
+                    mapCtrl: mapCtrl,
+                    isDark: isDark,
+                    isCompassAnimating: _isCompassAnimating,
+                    onCompassTap: () => _handleCompass(mapCtrl),
+                    onMuteTap: () => _toggleMute(navCtrl),
+                    onHazardTap: _showHazardDialog,
+                  );
+                },
               ),
             ),
 
             // 6. Bottom-Anchored Draggable Sheet
-            Positioned.fill(
+            Positioned(bottom: 0, left: 0, right: 0,
               child: DraggableScrollableSheet(
                 controller: _sheetController,
                 initialChildSize: 0.25,
@@ -233,7 +248,7 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
                     scrollController: scrollController,
                     navCtrl: navCtrl,
                     isDark: isDark,
-                    currentSnapIndex: _currentSnapIndex,
+                    currentSnapIndexListenable: _currentSnapIndex,
                     snapSizes: _snapSizes,
                     onPitStopAdd: _handlePitStopAdd,
                     onConfirmExit: _confirmExitNavigation,
@@ -288,7 +303,7 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
   void _showProfilePlaceholder() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Profile setup accessible from main menu.'),
+        content: Text(AppStrings.profileNotAvailable),
         behavior: SnackBarBehavior.floating,
       ),
     );

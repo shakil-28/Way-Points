@@ -13,10 +13,10 @@ class NavigationSpeedHud extends StatelessWidget {
     required this.isDark,
   });
 
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
+  static const Color textPrimary = AppTheme.textPrimary;
+  static const Color textSecondary = AppTheme.textSecondary;
   static const Color red = Color(0xFFDC2626);
-  static const Color borderColor = Color(0xFFE2E8F0);
+  static const Color borderColor = AppTheme.lightBorder;
 
   @override
   Widget build(BuildContext context) {

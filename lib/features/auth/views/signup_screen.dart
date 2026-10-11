@@ -6,7 +6,7 @@ import '../../../core/config/app_routes.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/auth_controller.dart';
 
-/// Screen 1b: Sign Up & Registration Screen
+/// New account registration screen for drivers, collecting user credentials and terms agreement.
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -33,7 +33,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final primaryTextColor = isDark ? Colors.white : AppTheme.textPrimary;
     final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF475569);
 
     return Scaffold(

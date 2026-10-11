@@ -7,7 +7,8 @@ import '../controllers/place_search_controller.dart';
 import '../models/place_model.dart';
 import 'search_view.dart';
 
-/// Screen 4: Search & Autocomplete Screen with automatic navigation to Explore Map upon place selection
+/// Search and location autocomplete screen providing destination search, heritage corridor banners,
+/// quick category filter chips, and recent trip search history.
 class SearchScreen extends StatefulWidget {
   final PlaceSearchController? controller;
   final ValueChanged<PlaceModel>? onPlaceSelected;
@@ -38,9 +39,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
     final bgBackgroundColor = isDark ? AppTheme.darkCanvas : const Color(0xFFFAFBFC);
     final cardBackgroundColor = isDark ? AppTheme.darkCard : Colors.white;
-    final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final primaryTextColor = isDark ? Colors.white : AppTheme.textPrimary;
     final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF475569);
-    final borderColor = isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0);
+    final borderColor = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
 
     return Scaffold(
       backgroundColor: bgBackgroundColor,

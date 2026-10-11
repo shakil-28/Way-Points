@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../theme/app_theme.dart';
+import 'circular_floating_button.dart';
 
 class ContextHeader extends StatelessWidget {
   final String title;
@@ -22,7 +23,13 @@ class ContextHeader extends StatelessWidget {
       height: 54,
       child: Row(
         children: <Widget>[
-          _headerBtn(icon: Symbols.arrow_back, onTap: onBack, isDark: isDark),
+          CircularFloatingButton(
+            icon: Symbols.arrow_back,
+            onTap: onBack,
+            isDark: isDark,
+            size: 44,
+            iconSize: 21,
+          ),
           const SizedBox(width: 4),
           Expanded(
             child: Center(
@@ -35,7 +42,7 @@ class ContextHeader extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        color: isDark ? Colors.white : AppTheme.textPrimary,
                         letterSpacing: -0.2,
                         shadows: <Shadow>[
                           Shadow(
@@ -59,67 +66,15 @@ class ContextHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          _headerBtn(
+          CircularFloatingButton(
             icon: Symbols.person,
             onTap: onProfile,
             isDark: isDark,
+            size: 44,
+            iconSize: 21,
             isProfile: true,
           ),
         ],
-      ),
-    );
-  }
-
-  static Widget _headerBtn({
-    required IconData icon,
-    required VoidCallback onTap,
-    required bool isDark,
-    bool isProfile = false,
-  }) {
-    final bgColor = isProfile
-        ? (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))
-        : (isDark ? AppTheme.darkCard : Colors.white);
-    return Container(
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Color(0x66000000),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 4,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Material(
-        color: bgColor,
-        shape: CircleBorder(
-          side: BorderSide(
-            color: isProfile
-                ? (isDark ? AppTheme.darkBorder : Colors.white)
-                : (isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0)),
-            width: isProfile ? 2 : 1,
-          ),
-        ),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: SizedBox(
-            width: 44,
-            height: 44,
-            child: Icon(
-              icon,
-              size: 21,
-              color: isProfile
-                  ? (isDark ? Colors.white70 : const Color(0xFF64748B))
-                  : (isDark ? Colors.white : const Color(0xFF0F172A)),
-            ),
-          ),
-        ),
       ),
     );
   }

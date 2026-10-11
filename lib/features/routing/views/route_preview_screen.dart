@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/context_header.dart';
 import '../../../core/utils/time_utils.dart';
@@ -9,7 +10,8 @@ import '../controllers/routing_controller.dart';
 import '../../map/controllers/map_controller.dart';
 import '../../map/views/map_view.dart';
 
-/// Full-screen corridor preview with animated map, POI pins, route selector, and CTA.
+/// Route options preview screen displaying alternate highway routes, distance metrics, ETA,
+/// toll calculations, and fuel efficiency indicators before initiating active navigation.
 class RoutePreviewScreen extends StatefulWidget {
   final VoidCallback onStartNavigation;
   final VoidCallback? onCancel;
@@ -96,7 +98,7 @@ class _RoutePreviewScreenState extends State<RoutePreviewScreen>
                       : Navigator.of(context).maybePop(),
               onProfile: () => ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Profile setup accessible from main menu.'),
+                  content: Text(AppStrings.profileNotAvailable),
                   behavior: SnackBarBehavior.floating,
                 ),
               ),
@@ -227,51 +229,7 @@ class _RoutePreviewScreenState extends State<RoutePreviewScreen>
     );
   }
 
-  // ── Status Pill ───────────────────────────────────────────────────
 
-  Widget _statusPill(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    Color? color,
-    Color? bgColor,
-    required bool isDark,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: (bgColor ?? (isDark ? const Color(0xFF1c1b1e) : Colors.white))
-            .withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: (bgColor ?? (isDark ? const Color(0xFF363436) : const Color(0xFFE2E8F0)))
-              .withValues(alpha: 0.8),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color ?? (isDark ? AppTheme.accentNeon : const Color(0xFF2563EB))),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color ?? (isDark ? Colors.white : const Color(0xFF1E293B)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ── Map Control Button ────────────────────────────────────────────
 

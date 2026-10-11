@@ -5,6 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../controllers/discovery_controller.dart';
 import '../models/poi_model.dart';
 
+/// Full-screen detail view for a selected Point of Interest (POI) showcasing photos, review quotes,
+/// detour time calculations, and direct navigation CTAs.
 class PoiDetailsScreen extends StatelessWidget {
   final PoiModel? poi;
   final VoidCallback onAddStop;

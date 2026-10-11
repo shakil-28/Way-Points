@@ -5,7 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../controllers/discovery_controller.dart';
 import '../models/poi_model.dart';
 
-/// Screen 3: Curated Corridor Discovery Draggable Sheet designed precisely according to HTML Specification
+/// Draggable bottom detail sheet presented over the map when a POI marker is tapped,
+/// showing landmark metadata, detour time impact, and route addition options.
 class PoiDetailsSheet extends StatefulWidget {
   final PoiModel? poi;
   final VoidCallback onAddStop;
@@ -42,9 +43,9 @@ class _PoiDetailsSheetState extends State<PoiDetailsSheet> {
     final isDark = theme.brightness == Brightness.dark;
 
     final cardBackgroundColor = isDark ? AppTheme.darkCard : Colors.white;
-    final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final primaryTextColor = isDark ? Colors.white : AppTheme.textPrimary;
     final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF475569);
-    final borderColor = isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0);
+    final borderColor = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.55,

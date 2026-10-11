@@ -5,7 +5,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../map/controllers/map_controller.dart';
 import '../../map/views/map_view.dart';
 
-/// Navigation Map Substrate & Vector Route Painter
+/// Navigation Map Substrate & Vector Route Painter wrapped in RepaintBoundary for 60fps isolation
 class NavigationMapView extends StatelessWidget {
   final MapController mapCtrl;
   final AnimationController pulseController;
@@ -20,23 +20,25 @@ class NavigationMapView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: <Widget>[
-        MapView(controller: mapCtrl),
-        AnimatedBuilder(
-          animation: pulseController,
-          builder: (context, _) {
-            return CustomPaint(
-              size: Size.infinite,
-              painter: _NavigationRoutePainter(
-                pulse: pulseController.value,
-                isDark: isDark,
-              ),
-            );
-          },
-        ),
-      ],
+    return RepaintBoundary(
+      child: Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          MapView(controller: mapCtrl),
+          AnimatedBuilder(
+            animation: pulseController,
+            builder: (context, _) {
+              return CustomPaint(
+                size: Size.infinite,
+                painter: _NavigationRoutePainter(
+                  pulse: pulseController.value,
+                  isDark: isDark,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
