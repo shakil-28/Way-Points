@@ -234,7 +234,7 @@ class _ActiveNavigationScreenState extends State<ActiveNavigationScreen>
             ),
 
             // 6. Bottom-Anchored Draggable Sheet
-            Positioned(bottom: 0, left: 0, right: 0,
+            Positioned.fill(
               child: DraggableScrollableSheet(
                 controller: _sheetController,
                 initialChildSize: 0.25,

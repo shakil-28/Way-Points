@@ -78,43 +78,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (sheetCtx) {
         final isDark =
             Theme.of(sheetCtx).brightness == Brightness.dark;
-        return Container(
-          decoration: BoxDecoration(
-            color: isDark ? AppTheme.darkCard : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Select Voice Language',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+        return Material(
+          color: isDark ? AppTheme.darkCard : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Select Voice Language',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppTheme.textPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              ...['Bengali (BD - Farhana)', 'English (US)', 'Hindi (IN)']
-                  .map((lang) => ListTile(
-                        title: Text(
-                          lang,
-                          style: TextStyle(
-                              color: isDark ? Colors.white70 : const Color(0xFF0F172A)),
-                        ),
-                        trailing: currentLang == lang
-                            ? const Icon(Symbols.check,
-                                color: AppTheme.primaryGreen)
-                            : null,
-                        onTap: () {
-                          _ctrl.setVoiceLanguage(lang);
-                          Navigator.pop(sheetCtx);
-                        },
-                      )
-              ),
-            ],
+                const SizedBox(height: 12),
+                ...['Bengali (BD - Farhana)', 'English (US)', 'Hindi (IN)']
+                    .map((lang) => ListTile(
+                          title: Text(
+                            lang,
+                            style: TextStyle(
+                                color: isDark ? Colors.white70 : AppTheme.textPrimary),
+                          ),
+                          trailing: currentLang == lang
+                              ? const Icon(Symbols.check,
+                                  color: AppTheme.primaryGreen)
+                              : null,
+                          onTap: () {
+                            _ctrl.setVoiceLanguage(lang);
+                            Navigator.pop(sheetCtx);
+                          },
+                        )
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -132,42 +132,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (sheetCtx) {
         final isDark =
             Theme.of(sheetCtx).brightness == Brightness.dark;
-        return Container(
-          decoration: BoxDecoration(
-            color: isDark ? AppTheme.darkCard : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Preferred Fuel Type',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+        return Material(
+          color: isDark ? AppTheme.darkCard : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Preferred Fuel Type',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppTheme.textPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              ...['Octane', 'CNG', 'Diesel', 'Electric']
-                  .map((fuel) => ListTile(
-                        title: Text(
-                          fuel,
-                          style: TextStyle(
-                              color: isDark ? Colors.white70 : const Color(0xFF0F172A)),
-                        ),
-                        trailing: currentFuel == fuel
-                            ? const Icon(Symbols.check,
-                                color: AppTheme.primaryGreen)
-                            : null,
-                        onTap: () {
-                          _onPreferredFuelChanged(fuel);
-                          Navigator.pop(sheetCtx);
-                        },
-                      )),
-            ],
+                const SizedBox(height: 12),
+                ...['Octane', 'CNG', 'Diesel', 'Electric']
+                    .map((fuel) => ListTile(
+                          title: Text(
+                            fuel,
+                            style: TextStyle(
+                                color: isDark ? Colors.white70 : AppTheme.textPrimary),
+                          ),
+                          trailing: currentFuel == fuel
+                              ? const Icon(Symbols.check,
+                                  color: AppTheme.primaryGreen)
+                              : null,
+                          onTap: () {
+                            _onPreferredFuelChanged(fuel);
+                            Navigator.pop(sheetCtx);
+                          },
+                        )),
+              ],
+            ),
           ),
         );
       },

@@ -14,6 +14,7 @@ import '../../navigation/controllers/navigation_controller.dart';
 import '../../navigation/views/navigation_overlay_view.dart';
 import '../../navigation/views/navigation_bottom_sheet.dart';
 import '../../navigation/views/navigation_poi_badge.dart';
+import '../../location/controllers/location_controller.dart';
 import '../../../core/config/app_routes.dart';
 import 'map_view.dart';
 
@@ -75,7 +76,16 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     if (_navSnapIndex.value != closestIndex) {
-      _navSnapIndex.value = closestIndex; // Dynamically switches UI between 0.25, 0.50, and 0.80!
+      _navSnapIndex.value = closestIndex;
+    }
+  }
+
+  void _recenterToLiveLocation(MapController controller) {
+    final locationCtrl = context.read<LocationController>();
+    if (locationCtrl.isLocationUpdated) {
+      controller.panTo(locationCtrl.state.latitude, locationCtrl.state.longitude, zoom: 15.0);
+    } else {
+      controller.resetToDhakaCenter();
     }
   }
 
@@ -109,7 +119,7 @@ class _MapScreenState extends State<MapScreen> {
                 discoveryCtrl.selectPoiById(poiId);
                 setState(() {
                   if (mode == MapScreenMode.navigation) {
-                    _showNavSheet = true; // Activate Navigation Dashboard Sheet
+                    _showNavSheet = true;
                   } else {
                     _showPoiSheet = true;
                   }
@@ -214,7 +224,7 @@ class _MapScreenState extends State<MapScreen> {
                     iconColor: AppTheme.primaryGreen,
                     isDark: isDark,
                     showActiveDot: true,
-                    onTap: controller.resetToDhakaCenter,
+                    onTap: () => _recenterToLiveLocation(controller),
                   ),
                 ],
               ),
@@ -382,7 +392,7 @@ class _MapScreenState extends State<MapScreen> {
                     icon: Symbols.my_location,
                     iconColor: AppTheme.primaryGreen,
                     isDark: isDark,
-                    onTap: controller.resetToDhakaCenter,
+                    onTap: () => _recenterToLiveLocation(controller),
                   ),
                   const SizedBox(height: 12),
                   CircularFloatingButton(
@@ -410,7 +420,7 @@ class _MapScreenState extends State<MapScreen> {
                     navCtrl.startNavigation();
                   }
                   setState(() {
-                    _showNavSheet = false; // Initially inactive until POI is tapped
+                    _showNavSheet = false;
                   });
                   controller.startNavigation();
                 },
@@ -451,7 +461,7 @@ class _MapScreenState extends State<MapScreen> {
                 isDark: isDark,
                 onTap: () {
                   setState(() {
-                    _showNavSheet = true; // Activate Navigation Dashboard Sheet
+                    _showNavSheet = true;
                   });
                 },
               ),
@@ -466,7 +476,7 @@ class _MapScreenState extends State<MapScreen> {
                 isDark: isDark,
                 onTap: () {
                   setState(() {
-                    _showNavSheet = true; // Activate Navigation Dashboard Sheet
+                    _showNavSheet = true;
                   });
                 },
               ),
@@ -481,7 +491,7 @@ class _MapScreenState extends State<MapScreen> {
                 isDark: isDark,
                 onTap: () {
                   setState(() {
-                    _showNavSheet = true; // Activate Navigation Dashboard Sheet
+                    _showNavSheet = true;
                   });
                 },
               ),
@@ -524,7 +534,7 @@ class _MapScreenState extends State<MapScreen> {
                     iconColor: AppTheme.primaryGreen,
                     isDark: isDark,
                     showActiveDot: true,
-                    onTap: controller.resetToDhakaCenter,
+                    onTap: () => _recenterToLiveLocation(controller),
                   ),
                 ],
               ),
@@ -559,7 +569,7 @@ class _MapScreenState extends State<MapScreen> {
                       },
                       onConfirmExit: () {
                         setState(() {
-                          _showNavSheet = false; // Hide sheet on exit
+                          _showNavSheet = false;
                         });
                       },
                     );
@@ -575,10 +585,7 @@ class _MapScreenState extends State<MapScreen> {
   void _showHazardReportSheet(BuildContext context, bool isDark) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: isDark ? AppTheme.darkCard : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
         final hazards = [
           {'title': 'Police Checkpoint', 'icon': Symbols.local_police, 'color': Colors.blue},
@@ -587,26 +594,27 @@ class _MapScreenState extends State<MapScreen> {
           {'title': 'Accident / Vehicle Breakdown', 'icon': Symbols.car_crash, 'color': Colors.redAccent},
         ];
 
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'REPORT HIGHWAY HAZARD',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.1,
-                  color: isDark ? Colors.white54 : Colors.black54,
+        return Material(
+          color: isDark ? AppTheme.darkCard : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'REPORT HIGHWAY HAZARD',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.1,
+                    color: isDark ? Colors.white54 : Colors.black54,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 14),
-              ...hazards.map((h) {
-                return Material(
-                  color: Colors.transparent,
-                  child: ListTile(
+                const SizedBox(height: 14),
+                ...hazards.map((h) {
+                  return ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: CircleAvatar(
                       backgroundColor: (h['color'] as Color).withValues(alpha: 0.15),
@@ -624,10 +632,10 @@ class _MapScreenState extends State<MapScreen> {
                         ),
                       );
                     },
-                  ),
-                );
-              }),
-            ],
+                  );
+                }),
+              ],
+            ),
           ),
         );
       },

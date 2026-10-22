@@ -1,72 +1,122 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../core/config/app_config.dart';
+import '../../../core/services/location_service.dart';
 import '../models/location_state.dart';
 
-/// Manages GPS coordinates, movement simulation, and permission events
+/// Manages real GPS coordinates and live position streaming
 class LocationController extends ChangeNotifier {
   LocationState _state = const LocationState(
     latitude: AppConfig.defaultLatitude,
     longitude: AppConfig.defaultLongitude,
-    speedKmh: AppConfig.defaultSpeedKmh,
-    heading: 142.0,
-    isTracking: true,
+    speedKmh: 0.0,
+    heading: 0.0,
+    isTracking: false,
     permissionStatus: LocationPermissionStatus.granted,
   );
 
-  Timer? _telemetryTimer;
+  StreamSubscription<Position>? _positionSubscription;
 
   LocationState get state => _state;
   bool get isGranted => _state.permissionStatus == LocationPermissionStatus.granted;
+  bool get isLocationUpdated => 
+      _state.latitude != AppConfig.defaultLatitude || 
+      _state.longitude != AppConfig.defaultLongitude;
 
   LocationController() {
-    startLocationTelemetry();
+    init();
   }
 
-  void requestPermission() {
-    _state = _state.copyWith(permissionStatus: LocationPermissionStatus.granted);
-    startLocationTelemetry();
-    notifyListeners();
+  /// Initialize location on startup and start live position stream
+  Future<void> init() async {
+    await fetchLocation();
+    startTracking();
   }
 
-  void startLocationTelemetry() {
-    _telemetryTimer?.cancel();
-    _state = _state.copyWith(isTracking: true);
-    notifyListeners();
+  /// Request location permission
+  Future<LocationPermission> requestPermission() async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      
+      if (permission == LocationPermission.denied) {
+        _state = _state.copyWith(permissionStatus: LocationPermissionStatus.denied);
+        notifyListeners();
+        return permission;
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        _state = _state.copyWith(permissionStatus: LocationPermissionStatus.restricted);
+        notifyListeners();
+        return permission;
+      }
+      
+      _state = _state.copyWith(permissionStatus: LocationPermissionStatus.granted);
+      notifyListeners();
+      
+      await fetchLocation();
+      startTracking();
+      return permission;
+    } catch (e) {
+      debugPrint('Permission error: $e');
+      return LocationPermission.denied;
+    }
+  }
 
-    // Subtle drift simulation along Dhaka corridor for live telemetry HUD
-    _telemetryTimer = Timer.periodic(
-      const Duration(milliseconds: AppConfig.gpsTelemetryIntervalMs),
-          (timer) {
-        if (!_state.isTracking) return;
-        final latDelta = (DateTime.now().millisecond % 5 - 2) * 0.00003;
-        final lonDelta = (DateTime.now().second % 5 - 2) * 0.00003;
+  /// Fetch location fix and update state
+  Future<void> fetchLocation() async {
+    final position = await LocationService.getCurrentLocation();
+    if (position != null) {
+      _state = _state.copyWith(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        speedKmh: position.speed * 3.6, // Convert m/s to km/h
+        heading: position.heading,
+        permissionStatus: LocationPermissionStatus.granted,
+      );
+      notifyListeners();
+    }
+  }
 
+  /// Start tracking live location stream
+  void startTracking() {
+    _positionSubscription?.cancel();
+    _positionSubscription = LocationService.getPositionStream().listen(
+      (position) {
         _state = _state.copyWith(
-          latitude: _state.latitude + latDelta,
-          longitude: _state.longitude + lonDelta,
-          speedKmh: 45.0 + (DateTime.now().second % 8),
-          heading: (_state.heading + 0.5) % 360,
+          latitude: position.latitude,
+          longitude: position.longitude,
+          speedKmh: position.speed * 3.6,
+          heading: position.heading,
+          isTracking: true,
+          permissionStatus: LocationPermissionStatus.granted,
         );
         notifyListeners();
+      },
+      onError: (error) {
+        debugPrint('Location stream error: $error');
       },
     );
   }
 
-  void stopLocationTelemetry() {
-    _telemetryTimer?.cancel();
-    _state = _state.copyWith(isTracking: false, speedKmh: 0.0);
-    notifyListeners();
+  /// Refresh location on demand
+  Future<void> refreshLocation() async {
+    await fetchLocation();
   }
 
-  void setCoordinates(double lat, double lon) {
-    _state = _state.copyWith(latitude: lat, longitude: lon);
+  /// Stop tracking location stream
+  void stopTracking() {
+    _positionSubscription?.cancel();
+    _state = _state.copyWith(isTracking: false);
     notifyListeners();
   }
 
   @override
   void dispose() {
-    _telemetryTimer?.cancel();
+    _positionSubscription?.cancel();
     super.dispose();
   }
 }

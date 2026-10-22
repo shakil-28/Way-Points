@@ -68,5 +68,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>GMSAPIKey</key>
+	<string>$(MAPS_API_KEY)</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>WayPoint needs your GPS location to track corridor routes.</string>
+
+    <key>io.flutter.embedded_views_preview</key>
+    <true/>
 </dict>
 </plist>
