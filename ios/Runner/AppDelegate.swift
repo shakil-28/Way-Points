@@ -9,11 +9,13 @@ import GoogleMaps
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    var mapsKey = Bundle.main.object(forInfoDictionaryKey: "GMSAPIKey") as? String ?? ""
-    if mapsKey.isEmpty || mapsKey.hasPrefix("$") {
-      mapsKey = "AIzaSyBrNLpWK0yrWXfxL7PYXFKkUTJH3GsaTh0"
+    if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GMSAPIKey") as? String,
+       !apiKey.isEmpty,
+       !apiKey.hasPrefix("$") {
+      GMSServices.provideAPIKey(apiKey)
+    } else {
+      print("⚠️ Google Maps API Key missing in Info.plist / Secrets.xcconfig")
     }
-    GMSServices.provideAPIKey(mapsKey)
 
     GeneratedPluginRegistrant.register(with: self)
 

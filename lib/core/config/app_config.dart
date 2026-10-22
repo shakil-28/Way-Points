@@ -13,7 +13,7 @@ class AppConfig {
   static String get googleMapsApiKey {
     return const String.fromEnvironment(
       'MAPS_API_KEY',
-      defaultValue: 'DEMO_MAPS_KEY_BENGAL',
+      defaultValue: 'YOUR_MAPS_API_KEY',
     );
   }
 

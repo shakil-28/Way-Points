@@ -30,6 +30,7 @@ migrate_working_dir/
 secrets.properties
 android/local.properties
 android/key.properties
+ios/Flutter/Secrets.xcconfig
 ios/Flutter/ephemeral/
 ios/Pods/
 ios/Podfile.lock

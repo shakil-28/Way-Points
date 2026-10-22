@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/place_search_controller.dart';
 
-/// Top Cyber-Spatial Floating Search Bar with microphone utility & quick category chips
+/// Top Cyber-Spatial Floating Search Bar with category filter chips, search input synchronization, & voice utility
 class SearchView extends StatefulWidget {
   final PlaceSearchController? controller;
   final ValueChanged<String>? onSearchSubmitted;
@@ -22,21 +22,30 @@ class SearchView extends StatefulWidget {
 }
 
 class _SearchViewState extends State<SearchView> {
-  TextEditingController _textController = TextEditingController();
+  late final TextEditingController _textController;
 
   @override
   void initState() {
     super.initState();
-    // Initialize text from the controller (available after mount when Provider is ready)
+    _textController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final ctrl = widget.controller ?? context.read<PlaceSearchController>();
-      _textController.text = ctrl.query.isEmpty ? 'Lalbagh Fort' : ctrl.query;
+      _textController.text = ctrl.query;
+      _textController.addListener(_onTextChanged);
     });
+  }
+
+  void _onTextChanged() {
+    final ctrl = widget.controller ?? context.read<PlaceSearchController>();
+    if (ctrl.query != _textController.text) {
+      ctrl.onQueryChanged(_textController.text);
+    }
   }
 
   @override
   void dispose() {
+    _textController.removeListener(_onTextChanged);
     _textController.dispose();
     super.dispose();
   }
@@ -78,9 +87,7 @@ class _SearchViewState extends State<SearchView> {
               Expanded(
                 child: TextField(
                   controller: _textController,
-                  onChanged: (val) {
-                    searchCtrl.onQueryChanged(val);
-                  },
+                  autofocus: true,
                   onSubmitted: widget.onSearchSubmitted,
                   style: TextStyle(
                     fontSize: 15,
@@ -116,8 +123,67 @@ class _SearchViewState extends State<SearchView> {
           ),
         ),
 
-        const SizedBox(height: 12)
+        const SizedBox(height: 10),
+
+        // Quick Category Filter Chips Row
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildCategoryChip(searchCtrl, 'all', 'All Places', Symbols.auto_awesome, isDark),
+              const SizedBox(width: 8),
+              _buildCategoryChip(searchCtrl, 'cultural', 'Cultural', Symbols.museum, isDark),
+              const SizedBox(width: 8),
+              _buildCategoryChip(searchCtrl, 'heritage', 'Heritage', Symbols.castle, isDark),
+              const SizedBox(width: 8),
+              _buildCategoryChip(searchCtrl, 'scenic', 'Scenic', Symbols.landscape, isDark),
+            ],
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildCategoryChip(
+    PlaceSearchController controller,
+    String id,
+    String label,
+    IconData icon,
+    bool isDark,
+  ) {
+    final isSelected = controller.selectedCategory == id;
+
+    return ChoiceChip(
+      selected: isSelected,
+      showCheckmark: false,
+      avatar: Icon(
+        icon,
+        size: 16,
+        color: isSelected
+            ? Colors.white
+            : (isDark ? Colors.white70 : const Color(0xFF475569)),
+      ),
+      label: Text(label),
+      selectedColor: AppTheme.primaryGreen,
+      backgroundColor: isDark ? AppTheme.darkCard : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: isSelected
+              ? AppTheme.primaryGreen
+              : (isDark ? AppTheme.darkBorder : const Color(0xFFE2E8F0)),
+        ),
+      ),
+      labelStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+        color: isSelected
+            ? Colors.white
+            : (isDark ? Colors.white70 : const Color(0xFF0F172A)),
+      ),
+      onSelected: (_) {
+        controller.selectCategory(id);
+      },
     );
   }
 }
