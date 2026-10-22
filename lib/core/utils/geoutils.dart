@@ -41,6 +41,26 @@ class GeoUtils {
     return dXt.abs();
   }
 
+  /// True bearing in degrees (0° to 360°) between two coordinates
+  static double calculateBearingDegrees({
+    required double lat1,
+    required double lon1,
+    required double lat2,
+    required double lon2,
+  }) {
+    final phi1 = _degreesToRadians(lat1);
+    final phi2 = _degreesToRadians(lat2);
+    final deltaLambda = _degreesToRadians(lon2 - lon1);
+
+    final y = math.sin(deltaLambda) * math.cos(phi2);
+    final x = math.cos(phi1) * math.sin(phi2) -
+        math.sin(phi1) * math.cos(phi2) * math.cos(deltaLambda);
+
+    final radians = math.atan2(y, x);
+    final degrees = radians * (180.0 / math.pi);
+    return (degrees + 360.0) % 360.0;
+  }
+
   /// Bearing in radians between two points
   static double _bearing(double lat1, double lon1, double lat2, double lon2) {
     final phi1 = _degreesToRadians(lat1);

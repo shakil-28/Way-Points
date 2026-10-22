@@ -1,9 +1,17 @@
-# Miscellaneous & System
+# ==========================================
+# SYSTEM & OS FILES
+# ==========================================
 *.class
 *.log
 *.pyc
 *.swp
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 .atom/
 .build/
 .buildlog/
@@ -12,28 +20,45 @@
 .swiftpm/
 migrate_working_dir/
 
-# Secrets & Local Configurations
+# ==========================================
+# SECRETS & LOCAL CONFIGURATIONS
+# ==========================================
 .env
 .env.*
 *.key
 *.pem
 secrets.properties
 android/local.properties
+android/key.properties
 ios/Flutter/ephemeral/
 ios/Pods/
 ios/Podfile.lock
 ios/.symlinks/
 
-# IntelliJ / Android Studio / VS Code
+# ==========================================
+# IDE & EDITOR FILES
+# ==========================================
 *.iml
 *.ipr
 *.iws
 .idea/
 .vscode/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.moved-aside
 
-# Flutter/Dart/Pub related
+# ==========================================
+# FLUTTER / DART / PUB ARTIFACTS
+# ==========================================
 **/doc/api/
 **/ios/Flutter/.last_build_id
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -41,12 +66,20 @@ ios/.symlinks/
 .pub/
 /build/
 /coverage/
+*.apk
+*.aab
 
-# Android Studio & Build Artifacts
+# ==========================================
+# ANDROID BUILD ARTIFACTS
+# ==========================================
+.gradle/
+/android/.gradle/
 /android/app/debug
 /android/app/profile
 /android/app/release
 
-# Widget Preview & Artifacts
+# ==========================================
+# IDE ARTIFACTS & WORKSPACE SCRATCH
+# ==========================================
 .widget_preview/
 .artifacts/

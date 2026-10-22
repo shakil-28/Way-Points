@@ -8,7 +8,7 @@ import '../../../features/location/controllers/location_controller.dart';
 import '../controllers/map_controller.dart';
 import '../models/map_state_model.dart';
 
-/// Displays a real Google Map with a custom Bengal Emerald live GPS marker
+/// Displays a real Google Map synchronized with live camera auto-follow & GPS location marker
 class MapView extends StatefulWidget {
   final MapController? controller;
   final ValueChanged<String>? onMarkerTap;
@@ -207,10 +207,23 @@ class _MapViewState extends State<MapView> {
         };
       });
 
-      // Auto-pan map camera to live GPS location when acquired on startup
-      if (!_hasPannedToInitialGps && _activeController != null) {
-        _hasPannedToInitialGps = true;
-        _activeController!.panTo(state.latitude, state.longitude, zoom: 15.0);
+      // Auto-pan camera to keep moving GPS marker centered in auto-follow mode
+      if (_activeController != null) {
+        if (!_hasPannedToInitialGps) {
+          _hasPannedToInitialGps = true;
+          _activeController!.updateCamera(
+            lat: state.latitude,
+            lon: state.longitude,
+            zoom: 15.0,
+          );
+        } else if (_activeController!.isAutoFollowEnabled) {
+          _activeController!.updateCamera(
+            lat: state.latitude,
+            lon: state.longitude,
+            zoom: _activeController!.state.zoomLevel,
+            bearing: state.heading,
+          );
+        }
       }
     }
   }
@@ -239,10 +252,12 @@ class _MapViewState extends State<MapView> {
 
     _lastRequestedCamera = position;
 
-    controller.panTo(
-      position.target.latitude,
-      position.target.longitude,
+    controller.updateCamera(
+      lat: position.target.latitude,
+      lon: position.target.longitude,
       zoom: position.zoom,
+      bearing: position.bearing,
+      tilt: position.tilt,
     );
   }
 

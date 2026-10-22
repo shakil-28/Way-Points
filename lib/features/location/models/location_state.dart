@@ -13,6 +13,7 @@ class LocationState {
   final double speedKmh;
   final double accuracyMeters;
   final bool isTracking;
+  final bool hasRealGpsFix;
   final LocationPermissionStatus permissionStatus;
   final String? activeCorridor;
 
@@ -23,6 +24,7 @@ class LocationState {
     this.speedKmh = 0.0,
     this.accuracyMeters = 5.0,
     this.isTracking = false,
+    this.hasRealGpsFix = false,
     this.permissionStatus = LocationPermissionStatus.granted,
     this.activeCorridor = 'N1 Highway / Dhaka-Chattogram Express',
   });
@@ -34,6 +36,7 @@ class LocationState {
     double? speedKmh,
     double? accuracyMeters,
     bool? isTracking,
+    bool? hasRealGpsFix,
     LocationPermissionStatus? permissionStatus,
     String? activeCorridor,
   }) {
@@ -44,6 +47,7 @@ class LocationState {
       speedKmh: speedKmh ?? this.speedKmh,
       accuracyMeters: accuracyMeters ?? this.accuracyMeters,
       isTracking: isTracking ?? this.isTracking,
+      hasRealGpsFix: hasRealGpsFix ?? this.hasRealGpsFix,
       permissionStatus: permissionStatus ?? this.permissionStatus,
       activeCorridor: activeCorridor ?? this.activeCorridor,
     );

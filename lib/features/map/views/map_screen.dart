@@ -81,11 +81,18 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _recenterToLiveLocation(MapController controller) {
+    controller.setAutoFollow(true);
     final locationCtrl = context.read<LocationController>();
     if (locationCtrl.isLocationUpdated) {
       controller.panTo(locationCtrl.state.latitude, locationCtrl.state.longitude, zoom: 15.0);
     } else {
-      controller.resetToDhakaCenter();
+      locationCtrl.requestPermission().then((_) {
+        if (locationCtrl.isLocationUpdated) {
+          controller.panTo(locationCtrl.state.latitude, locationCtrl.state.longitude, zoom: 15.0);
+        } else {
+          controller.resetToDhakaCenter();
+        }
+      });
     }
   }
 

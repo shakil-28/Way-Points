@@ -8,7 +8,7 @@ if (localPropertiesFile.exists()) {
     }
 }
 
-val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY") ?: "YOUR_ANDROID_MAPS_API_KEY"
+val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY") ?: "AIzaSyCnPh6dFHh8Pn4obz3pTEQhVES8bUKd-uo"
 
 plugins {
     id("com.android.application")
@@ -32,7 +32,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = flutter.targetSdkversion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
         // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`

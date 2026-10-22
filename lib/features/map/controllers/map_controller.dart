@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../../../core/config/app_config.dart';
 import '../models/map_state_model.dart';
 
-/// Interactive Map Controller governing viewport panning, zoom, layers, map modes, and waypoint focusing
+/// Interactive Map Controller governing viewport panning, auto-follow camera, zoom, layers, and map modes
 class MapController extends ChangeNotifier {
   MapStateModel _state = const MapStateModel(
     centerLatitude: AppConfig.defaultLatitude,
@@ -12,8 +12,18 @@ class MapController extends ChangeNotifier {
     screenMode: MapScreenMode.explore,
   );
 
+  bool _isAutoFollowEnabled = true;
+
   MapStateModel get state => _state;
   MapScreenMode get screenMode => _state.screenMode;
+  bool get isAutoFollowEnabled => _isAutoFollowEnabled;
+
+  void setAutoFollow(bool enabled) {
+    if (_isAutoFollowEnabled != enabled) {
+      _isAutoFollowEnabled = enabled;
+      notifyListeners();
+    }
+  }
 
   void zoomIn() {
     _state = _state.copyWith(zoomLevel: (_state.zoomLevel + 1.0).clamp(5.0, 20.0));
@@ -25,11 +35,30 @@ class MapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void panTo(double lat, double lon, {double? zoom}) {
+  void panTo(double lat, double lon, {double? zoom, double? bearing, double? tilt}) {
     _state = _state.copyWith(
       centerLatitude: lat,
       centerLongitude: lon,
       zoomLevel: zoom ?? _state.zoomLevel,
+      bearing: bearing ?? _state.bearing,
+      tilt: tilt ?? _state.tilt,
+    );
+    notifyListeners();
+  }
+
+  void updateCamera({
+    required double lat,
+    required double lon,
+    required double zoom,
+    double? bearing,
+    double? tilt,
+  }) {
+    _state = _state.copyWith(
+      centerLatitude: lat,
+      centerLongitude: lon,
+      zoomLevel: zoom,
+      bearing: bearing ?? _state.bearing,
+      tilt: tilt ?? _state.tilt,
     );
     notifyListeners();
   }
@@ -56,6 +85,7 @@ class MapController extends ChangeNotifier {
 
   void startNavigation() {
     _state = _state.copyWith(screenMode: MapScreenMode.navigation);
+    _isAutoFollowEnabled = true;
     notifyListeners();
   }
 
@@ -80,6 +110,7 @@ class MapController extends ChangeNotifier {
   }
 
   void resetToDhakaCenter() {
-    panTo(AppConfig.defaultLatitude, AppConfig.defaultLongitude, zoom: 13.5);
+    _isAutoFollowEnabled = false;
+    panTo(AppConfig.defaultLatitude, AppConfig.defaultLongitude, zoom: 13.5, bearing: 0.0, tilt: 0.0);
   }
 }
