@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../core/config/app_routes.dart';
 import '../features/auth/views/login_screen.dart';
-import '../features/auth/views/signup_screen.dart';
 import '../features/auth/views/profile_setup_screen.dart';
 import '../features/discovery/controllers/discovery_controller.dart';
 import '../features/discovery/views/poi_details_screen.dart';
@@ -24,7 +23,7 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutes.signUp,
-        builder: (context, state) => const SignUpScreen(),
+        builder: (context, state) => const ProfileSetupScreen(),
       ),
       GoRoute(
         path: AppRoutes.profileSetup,

@@ -5,12 +5,13 @@ import '../core/config/app_config.dart';
 import '../core/theme/app_theme.dart';
 import '../features/auth/controllers/auth_controller.dart';
 import '../features/discovery/controllers/discovery_controller.dart';
+import '../features/hazards/controllers/hazard_controller.dart';
 import '../features/history/controllers/history_controller.dart';
 import '../features/location/controllers/location_controller.dart';
 import '../features/map/controllers/map_controller.dart';
 import '../features/navigation/controllers/navigation_controller.dart';
 import '../features/routing/controllers/routing_controller.dart';
-import '../features/search/controllers/place_search_controller.dart'; // from here
+import '../features/search/controllers/place_search_controller.dart';
 import '../features/settings/controllers/settings_controller.dart';
 import '../features/settings/models/settings_model.dart';
 import '../routes/app_router.dart';
@@ -32,6 +33,7 @@ class WaypointApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DiscoveryController()),
         ChangeNotifierProvider(create: (_) => HistoryController()),
         ChangeNotifierProvider(create: (_) => SettingsController()),
+        ChangeNotifierProvider(create: (_) => HazardController()),
       ],
       child: Consumer<SettingsController>(
         builder: (context, settingsController, _) {

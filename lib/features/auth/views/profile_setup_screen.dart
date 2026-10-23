@@ -6,8 +6,8 @@ import '../../../core/config/app_routes.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/auth_controller.dart';
 
-/// Driver profile configuration screen (Step 2 of 2) for specifying driver photo, preferred vehicle type,
-/// speed measurement units, and navigation preferences.
+/// Password Confirmation & Driver Setup Screen (Step 2 of 2) for setting a password
+/// to enable Email+Password login alongside Google/Facebook SSO.
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
 
@@ -16,14 +16,35 @@ class ProfileSetupScreen extends StatefulWidget {
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
-  final _passwordController = TextEditingController(text: '••••••••••••••••');
-  final _confirmPasswordController = TextEditingController(text: '••••••••••••••••');
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  late final TextEditingController _nicknameController;
+  final _emergencyContactController = TextEditingController(text: '+880 1700-000000');
   bool _isPasswordVisible = false;
+  String _selectedAvatarUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400';
+
+  final List<String> _avatars = const [
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    final authCtrl = context.read<AuthController>();
+    _nicknameController = TextEditingController(
+      text: authCtrl.user.nickname.isNotEmpty ? authCtrl.user.nickname : 'Bengal Navigator',
+    );
+  }
 
   @override
   void dispose() {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _nicknameController.dispose();
+    _emergencyContactController.dispose();
     super.dispose();
   }
 
@@ -46,7 +67,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
           child: Column(
             children: [
-              // Top Hero Card: Verified Social Token & Step 2 of 2
+              // Top Hero Banner
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16.0),
@@ -64,7 +85,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top badges row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -117,9 +137,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       ],
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
-                    // Bottom info row
                     Row(
                       children: [
                         Container(
@@ -137,7 +156,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'ACCOUNT INITIALIZATION',
+                              'CONNECTED ACCOUNT',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -146,9 +165,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                               ),
                             ),
                             Text(
-                              'Direct Credential Link',
+                              authCtrl.user.email.isNotEmpty ? authCtrl.user.email : 'explorer@google.com',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 color: isDark ? Colors.white : const Color(0xFF0F172A),
                               ),
@@ -163,7 +182,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
               const SizedBox(height: 16),
 
-              // Main Form Card: Complete Profile
+              // Main Form Console: Set Password & Complete Profile
               Container(
                 padding: const EdgeInsets.all(22.0),
                 decoration: BoxDecoration(
@@ -181,42 +200,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title & Secure Auth Badge Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Complete Profile',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: primaryTextColor,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE6F7F0),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFA3E6D2)),
-                          ),
-                          child: const Text(
-                            'SECURE AUTH',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.6,
-                              color: AppTheme.primaryGreen,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'Password Confirmation',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: primaryTextColor,
+                      ),
                     ),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
 
                     Text(
-                      'Set a secure password. This allows you to log in directly using your phone or email next time.',
+                      'Set a password for your email. This allows you to log in directly using Email + Password in addition to Google/Facebook SSO.',
                       style: TextStyle(
                         fontSize: 13,
                         color: secondaryTextColor,
@@ -226,37 +222,22 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Choose Password Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Choose Password',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: primaryTextColor,
-                          ),
-                        ),
-                        const Text(
-                          'STRONG',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryGreen,
-                          ),
-                        ),
-                      ],
+                    // Password Field
+                    Text(
+                      'Create Password',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: primaryTextColor,
+                      ),
                     ),
-
                     const SizedBox(height: 8),
-
-                    // Password Input Box
                     TextField(
                       controller: _passwordController,
                       obscureText: !_isPasswordVisible,
                       style: TextStyle(color: primaryTextColor, fontSize: 14),
                       decoration: InputDecoration(
+                        hintText: 'At least 6 characters',
                         suffixIcon: IconButton(
                           icon: Icon(
                             _isPasswordVisible ? Symbols.visibility : Symbols.visibility_off,
@@ -283,96 +264,24 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
 
-                    // Password Strength Segmented Meter
-                    Row(
-                      children: List.generate(4, (index) {
-                        return Expanded(
-                          child: Container(
-                            height: 5,
-                            margin: EdgeInsets.only(right: index < 3 ? 6.0 : 0),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryGreen,
-                              borderRadius: BorderRadius.circular(2.5),
-                            ),
-                          ),
-                        );
-                      }),
+                    // Confirm Password Field
+                    Text(
+                      'Confirm Password',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: primaryTextColor,
+                      ),
                     ),
-
                     const SizedBox(height: 8),
-
-                    // Strength Indicator Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Symbols.check_circle, size: 14, color: AppTheme.primaryGreen),
-                            SizedBox(width: 4),
-                            Text(
-                              'Symbols & numerals matched',
-                              style: TextStyle(fontSize: 11, color: AppTheme.primaryGreen, fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          '16 chars',
-                          style: TextStyle(fontSize: 11, color: secondaryTextColor),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Confirm Password Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Confirm Password',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: primaryTextColor,
-                          ),
-                        ),
-                        const Row(
-                          children: [
-                            Icon(Symbols.check, size: 14, color: AppTheme.primaryGreen),
-                            SizedBox(width: 2),
-                            Text(
-                              'MATCHED',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryGreen,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Confirm Password Input Box
                     TextField(
                       controller: _confirmPasswordController,
                       obscureText: true,
                       style: TextStyle(color: primaryTextColor, fontSize: 14),
                       decoration: InputDecoration(
-                        suffixIcon: Container(
-                          margin: const EdgeInsets.all(8),
-                          width: 28,
-                          height: 28,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFE6F7F0),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Symbols.check, size: 16, color: AppTheme.primaryGreen),
-                        ),
+                        hintText: 'Re-type password',
                         filled: true,
                         fillColor: isDark ? AppTheme.darkCanvas : Colors.white,
                         border: OutlineInputBorder(
@@ -389,66 +298,144 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Fast Biometric Routing Tile
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppTheme.darkCanvas : const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: borderColor),
+                    // Choose Avatar
+                    Text(
+                      'Choose Driver Avatar',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: primaryTextColor,
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: _avatars.map((url) {
+                        final isSelected = _selectedAvatarUrl == url;
+                        return GestureDetector(
+                          onTap: () => setState(() => _selectedAvatarUrl = url),
+                          child: Container(
                             decoration: BoxDecoration(
-                              color: isDark ? AppTheme.darkCard : const Color(0xFFE2E8F0),
                               shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected ? AppTheme.primaryGreen : Colors.transparent,
+                                width: 3,
+                              ),
                             ),
-                            child: Icon(Symbols.fingerprint, size: 22, color: primaryTextColor),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Fast Biometric Routing',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: primaryTextColor,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'You can activate Touch/Face ID after setup',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: secondaryTextColor,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
+                            child: CircleAvatar(
+                              radius: 26,
+                              backgroundImage: NetworkImage(url),
                             ),
                           ),
-                        ],
+                        );
+                      }).toList(),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Handle Nickname
+                    Text(
+                      'Navigator Handle / Nickname',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: primaryTextColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _nicknameController,
+                      style: TextStyle(color: primaryTextColor, fontSize: 14),
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Symbols.badge, size: 20),
+                        filled: true,
+                        fillColor: isDark ? AppTheme.darkCanvas : Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Emergency Highway Contact
+                    Text(
+                      'Emergency SOS Highway Contact',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: primaryTextColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _emergencyContactController,
+                      keyboardType: TextInputType.phone,
+                      style: TextStyle(color: primaryTextColor, fontSize: 14),
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Symbols.phone_in_talk, size: 20),
+                        filled: true,
+                        fillColor: isDark ? AppTheme.darkCanvas : Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
                     ),
 
                     const SizedBox(height: 24),
 
-                    // Primary Save & Continue CTA
+                    // Save & Continue Button
                     ElevatedButton(
-                      onPressed: () {
-                        authCtrl.updateProfile(
-                          nickname: 'Bengal Navigator',
-                          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
-                          emergencyContact: '+880 1700-000000',
+                      onPressed: () async {
+                        final pass = _passwordController.text.trim();
+                        final confirmPass = _confirmPasswordController.text.trim();
+
+                        if (pass.length < 6) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Password must be at least 6 characters long.'),
+                              backgroundColor: Colors.redAccent,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return;
+                        }
+
+                        if (pass != confirmPass) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Passwords do not match. Please check again.'),
+                              backgroundColor: Colors.redAccent,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return;
+                        }
+
+                        await authCtrl.completeProfileWithPassword(
+                          password: pass,
+                          nickname: _nicknameController.text.trim().isNotEmpty
+                              ? _nicknameController.text.trim()
+                              : 'Bengal Navigator',
+                          avatarUrl: _selectedAvatarUrl,
+                          emergencyContact: _emergencyContactController.text.trim(),
                         );
-                        context.go(AppRoutes.map);
+
+                        if (context.mounted) {
+                          context.go(AppRoutes.map);
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryGreen,
@@ -461,8 +448,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Save & Continue',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            'Save & Explore Map',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                           ),
                           SizedBox(width: 8),
                           Icon(Symbols.arrow_forward, size: 20, color: Colors.white),
@@ -474,38 +461,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               ),
 
               const SizedBox(height: 20),
-
-              // Bottom Security Footer Badge
-              Column(
-                children: [
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Symbols.verified_user, size: 16, color: AppTheme.primaryGreen),
-                      SizedBox(width: 6),
-                      Text(
-                        'ENCRYPTED WITH 256-BIT AES PROTOCOL',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.8,
-                          color: Color(0xFF1E3A2F),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'WayPoint Navigation Core Engine • Zero Plaintext Transmission',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: secondaryTextColor,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
             ],
           ),
         ),

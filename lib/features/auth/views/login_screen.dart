@@ -7,8 +7,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/waypoint_logo.dart';
 import '../controllers/auth_controller.dart';
 
-/// Driver sign-in and authentication view with email/password input, SSO login buttons,
-/// and navigation to account registration or profile setup.
+/// Driver Sign-In Console with production Google/Facebook SSO options directing new sign-ins
+/// to Password Confirmation & Driver Profile Setup.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -17,8 +17,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController(text: 'alex.morales@waypoint.io');
-  final _passwordController = TextEditingController(text: '••••••••••••');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _rememberMe = true;
 
   @override
@@ -26,6 +26,65 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _showForgotPasswordDialog(BuildContext context, AuthController authCtrl) {
+    final resetEmailController = TextEditingController(text: _emailController.text);
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Reset Password', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Enter your registered email address and we will send you a password reset link.',
+                style: TextStyle(fontSize: 13, color: Colors.black87),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: resetEmailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Email Address',
+                  hintText: 'name@example.com',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Symbols.mail, size: 20),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () async {
+                final error = await authCtrl.sendPasswordResetEmail(resetEmailController.text);
+                if (dialogCtx.mounted) Navigator.of(dialogCtx).pop();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(error ?? 'Password reset link sent to ${resetEmailController.text}!'),
+                      backgroundColor: error == null ? AppTheme.primaryGreen : Colors.redAccent,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Send Reset Link', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -47,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
           child: Column(
             children: [
-              // Telemetry Coordinates Ribbon (Cyberpunk Micro-Detail)
+              // Telemetry Ribbon
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -86,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 16),
 
-              // Main Glassmorphism Auth Console
+              // Main Auth Console
               Container(
                 padding: const EdgeInsets.all(24.0),
                 decoration: BoxDecoration(
@@ -103,7 +162,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Column(
                   children: [
-                    // Brand Crest & Header
                     WayPointLogo(size: 64, tintColor: AppTheme.accentNeon, filledBg: true),
 
                     const SizedBox(height: 12),
@@ -131,7 +189,150 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Email Field
+                    // ---------------------------------------------------------
+                    // 1. PRIMARY SIGN-IN OPTIONS: GOOGLE ("GMAIL") & FACEBOOK
+                    // ---------------------------------------------------------
+                    Text(
+                      'SIGN IN WITH SOCIAL IDENTIFIER',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.8,
+                        color: secondaryTextColor,
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Google (Gmail) Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton(
+                        onPressed: authCtrl.isLoading
+                            ? null
+                            : () async {
+                                final errorMessage = await authCtrl.loginWithGoogle();
+                                if (errorMessage == null && context.mounted) {
+                                  context.go(AppRoutes.profileSetup);
+                                } else if (errorMessage != null && errorMessage != 'Google sign in canceled.' && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(errorMessage),
+                                      backgroundColor: Colors.redAccent,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              },
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppTheme.primaryGreen, width: 1.5),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 12,
+                              backgroundColor: isDark ? AppTheme.darkCanvas : const Color(0xFFF1F5F9),
+                              child: const Text(
+                                'G',
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.redAccent),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Continue with Gmail / Google',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: primaryTextColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Facebook Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton(
+                        onPressed: authCtrl.isLoading
+                            ? null
+                            : () async {
+                                final errorMessage = await authCtrl.loginWithFacebook();
+                                if (errorMessage == null && context.mounted) {
+                                  context.go(AppRoutes.profileSetup);
+                                } else if (errorMessage != null && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(errorMessage),
+                                      backgroundColor: Colors.redAccent,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              },
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: borderColor),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircleAvatar(
+                              radius: 12,
+                              backgroundColor: Color(0xFF005737),
+                              child: Text(
+                                'f',
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Continue with Facebook',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: primaryTextColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Divider
+                    Row(
+                      children: [
+                        Expanded(child: Divider(color: borderColor)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'OR EMAIL & PASSWORD',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.8,
+                              color: secondaryTextColor,
+                            ),
+                          ),
+                        ),
+                        Expanded(child: Divider(color: borderColor)),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ---------------------------------------------------------
+                    // 2. EMAIL & PASSWORD LOGIN
+                    // ---------------------------------------------------------
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -170,7 +371,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Password Field
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -188,7 +388,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           obscureText: !authCtrl.isPasswordVisible,
                           style: TextStyle(color: primaryTextColor, fontSize: 14),
                           decoration: InputDecoration(
-                            hintText: 'Enter your password',
+                            hintText: 'Enter password',
                             hintStyle: TextStyle(color: secondaryTextColor, fontSize: 14),
                             prefixIcon: Icon(Symbols.lock, size: 20, color: secondaryTextColor),
                             suffixIcon: IconButton(
@@ -217,7 +417,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 12),
 
-                    // Remember Me & Forgot Password
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -243,7 +442,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () => _showForgotPasswordDialog(context, authCtrl),
                           child: const Text(
                             'Forgot Password?',
                             style: TextStyle(
@@ -258,7 +457,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Primary Gradient Sign In CTA
+                    // Sign In CTA
                     Container(
                       width: double.infinity,
                       height: 52,
@@ -279,14 +478,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: authCtrl.isLoading
                             ? null
                             : () async {
-                          final success = await authCtrl.login(
-                            _emailController.text,
-                            _passwordController.text,
-                          );
-                          if (success && context.mounted) {
-                            context.go(AppRoutes.map);
-                          }
-                        },
+                                final errorMessage = await authCtrl.login(
+                                  _emailController.text,
+                                  _passwordController.text,
+                                );
+                                if (errorMessage == null && context.mounted) {
+                                  context.go(AppRoutes.map);
+                                } else if (errorMessage != null && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(errorMessage),
+                                      backgroundColor: Colors.redAccent,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
@@ -294,155 +501,26 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         child: authCtrl.isLoading
                             ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
                             : const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Sign In',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Sign In with Email',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Icon(Symbols.explore, size: 20, color: Colors.white),
+                                ],
                               ),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(Symbols.explore, size: 20, color: Colors.white),
-                          ],
-                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Soft Divider
-                    Row(
-                      children: [
-                        Expanded(child: Divider(color: borderColor)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            'OR CONNECT WITH',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.8,
-                              color: secondaryTextColor,
-                            ),
-                          ),
-                        ),
-                        Expanded(child: Divider(color: borderColor)),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Social Identity Pills
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () async {
-                              final success = await authCtrl.loginWithGoogle();
-                              if (success && context.mounted) {
-                                context.go(AppRoutes.map);
-                              }
-                            },
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              side: BorderSide(color: borderColor),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircleAvatar(
-                                  radius: 12,
-                                  backgroundColor: isDark ? AppTheme.darkCanvas : const Color(0xFFF1F5F9),
-                                  child: const Text(
-                                    'G',
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.redAccent),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Google',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: primaryTextColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () async {
-                              final success = await authCtrl.loginWithFacebook();
-                              if (success && context.mounted) {
-                                context.go(AppRoutes.map);
-                              }
-                            },
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              side: BorderSide(color: borderColor),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircleAvatar(
-                                  radius: 12,
-                                  backgroundColor: const Color(0xFF005737),
-                                  child: const Text(
-                                    'f',
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Facebook',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: primaryTextColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Sign Up Link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account? ",
-                          style: TextStyle(fontSize: 13, color: secondaryTextColor),
-                        ),
-                        GestureDetector(
-                          onTap: () => context.push(AppRoutes.signUp),
-                          child: const Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryGreen,
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
@@ -458,9 +536,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: const Color(0xFFC4EBD4)),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Icon(Symbols.verified_user, size: 16, color: AppTheme.primaryGreen),
                     SizedBox(width: 6),
                     Text(

@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../features/hazards/controllers/hazard_controller.dart';
 import '../../../features/location/controllers/location_controller.dart';
 
 import '../controllers/map_controller.dart';
 import '../models/map_state_model.dart';
 
-/// Displays a real Google Map synchronized with live camera auto-follow & GPS location marker
+/// Displays a real Google Map synchronized with live camera auto-follow, GPS marker, & hazard overlays
 class MapView extends StatefulWidget {
   final MapController? controller;
   final ValueChanged<String>? onMarkerTap;
@@ -193,6 +194,12 @@ class _MapViewState extends State<MapView> {
     if (locationCtrl.isLocationUpdated) {
       final state = locationCtrl.state;
       final gpsPosition = LatLng(state.latitude, state.longitude);
+
+      // Check proximity hazard warnings as driver moves
+      context.read<HazardController>().checkProximityAlerts(
+        driverLat: state.latitude,
+        driverLng: state.longitude,
+      );
       
       setState(() {
         _markers = {
@@ -272,6 +279,25 @@ class _MapViewState extends State<MapView> {
   Widget build(BuildContext context) {
     final mapController =
         widget.controller ?? context.watch<MapController>();
+    final hazardController = context.watch<HazardController>();
+
+    final hazardMarkers = hazardController.hazards.map((h) {
+      return Marker(
+        markerId: MarkerId('haz_${h.id}'),
+        position: LatLng(h.latitude, h.longitude),
+        icon: BitmapDescriptor.defaultMarkerWithHue(
+          h.type == 'police'
+              ? BitmapDescriptor.hueAzure
+              : (h.type == 'traffic' ? BitmapDescriptor.hueOrange : BitmapDescriptor.hueRed),
+        ),
+        infoWindow: InfoWindow(
+          title: '⚠️ ${h.title}',
+          snippet: 'Reported by ${h.reportedBy}',
+        ),
+      );
+    }).toSet();
+
+    final allMapMarkers = {..._markers, ...hazardMarkers};
 
     return AnimatedBuilder(
       animation: mapController,
@@ -295,7 +321,7 @@ class _MapViewState extends State<MapView> {
           myLocationEnabled: false,
           myLocationButtonEnabled: false,
           
-          markers: _markers,
+          markers: allMapMarkers,
 
           compassEnabled: true,
           zoomControlsEnabled: false,

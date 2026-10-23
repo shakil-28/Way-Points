@@ -51,6 +51,19 @@
     </array>
     <key>GMSAPIKey</key>
     <string>$(MAPS_API_KEY)</string>
+    <key>GIDClientID</key>
+    <string>385086152738-kanl4nougl91dtcdlenpc3rcqfeproje.apps.googleusercontent.com</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.385086152738-kanl4nougl91dtcdlenpc3rcqfeproje</string>
+            </array>
+        </dict>
+    </array>
     <key>io.flutter.embedded_views_preview</key>
     <true/>
 </dict>

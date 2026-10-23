@@ -41,6 +41,49 @@ class GeoUtils {
     return dXt.abs();
   }
 
+  /// Computes the shortest cross-track distance in kilometers from a GPS location to any segment of a route polyline.
+  static double minDistanceToPolylineKm({
+    required double lat,
+    required double lng,
+    required List<Map<String, double>> polyline,
+  }) {
+    if (polyline.length < 2) return 0.0;
+
+    double minDistance = double.infinity;
+
+    for (int i = 0; i < polyline.length - 1; i++) {
+      final start = polyline[i];
+      final end = polyline[i + 1];
+
+      final dist = pointToLineDistanceKm(
+        pLat: lat,
+        pLon: lng,
+        lineStartLat: start['lat'] ?? 0.0,
+        lineStartLon: start['lng'] ?? 0.0,
+        lineEndLat: end['lat'] ?? 0.0,
+        lineEndLon: end['lng'] ?? 0.0,
+      );
+
+      if (dist < minDistance) {
+        minDistance = dist;
+      }
+    }
+
+    return minDistance == double.infinity ? 0.0 : minDistance;
+  }
+
+  /// Returns true if the GPS position is off-route beyond thresholdKm (default 100 meters / 0.1 km)
+  static bool isOffRoute({
+    required double lat,
+    required double lng,
+    required List<Map<String, double>> polyline,
+    double thresholdKm = 0.1,
+  }) {
+    if (polyline.length < 2) return false;
+    final dist = minDistanceToPolylineKm(lat: lat, lng: lng, polyline: polyline);
+    return dist > thresholdKm;
+  }
+
   /// True bearing in degrees (0° to 360°) between two coordinates
   static double calculateBearingDegrees({
     required double lat1,

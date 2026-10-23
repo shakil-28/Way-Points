@@ -89,6 +89,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 obscureText: !authCtrl.isPasswordVisible,
                 decoration: InputDecoration(
                   labelText: 'Secure Password',
+                  hintText: 'At least 6 characters',
                   prefixIcon: const Icon(Symbols.lock, size: 20),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -129,13 +130,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 onPressed: authCtrl.isLoading || !authCtrl.acceptedTerms
                     ? null
                     : () async {
-                  final success = await authCtrl.signUp(
+                  final errorMessage = await authCtrl.signUp(
                     _nameController.text,
                     _emailController.text,
                     _passwordController.text,
                   );
-                  if (success && context.mounted) {
+                  if (errorMessage == null && context.mounted) {
                     context.go(AppRoutes.profileSetup);
+                  } else if (errorMessage != null && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(errorMessage),
+                        backgroundColor: Colors.redAccent,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
                   }
                 },
                 style: ElevatedButton.styleFrom(

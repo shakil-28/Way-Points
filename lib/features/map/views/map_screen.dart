@@ -9,6 +9,8 @@ import '../controllers/map_controller.dart';
 import '../models/map_state_model.dart';
 import '../../discovery/controllers/discovery_controller.dart';
 import '../../discovery/views/poi_details_sheet.dart';
+import '../../hazards/controllers/hazard_controller.dart';
+import '../../hazards/models/hazard_model.dart';
 import '../../routing/views/route_preview_view.dart';
 import '../../navigation/controllers/navigation_controller.dart';
 import '../../navigation/views/navigation_overlay_view.dart';
@@ -101,6 +103,9 @@ class _MapScreenState extends State<MapScreen> {
     final controller = widget.mapController ?? context.watch<MapController>();
     final discoveryCtrl = context.watch<DiscoveryController>();
     final navCtrl = context.watch<NavigationController>();
+    final hazardCtrl = context.watch<HazardController>();
+    final nearbyHazard = hazardCtrl.nearbyActiveHazard;
+
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -111,6 +116,11 @@ class _MapScreenState extends State<MapScreen> {
     final primaryTextColor = isDark ? Colors.white : AppTheme.textPrimary;
     final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF475569);
     final borderColor = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
+
+    // Calculate non-overlapping vertical offsets for top HUD cards and hazard banner
+    final double hazardBannerTopOffset = mode == MapScreenMode.navigation
+        ? topPadding + 84.0
+        : (mode == MapScreenMode.routePreview ? topPadding + 68.0 : topPadding + 70.0);
 
     return Scaffold(
       body: Stack(
@@ -134,6 +144,15 @@ class _MapScreenState extends State<MapScreen> {
               },
             ),
           ),
+
+          // Proximity Highway Hazard Alert Banner (Positioned without overlap)
+          if (nearbyHazard != null)
+            _buildProximityHazardBanner(
+              nearbyHazard: nearbyHazard,
+              isDark: isDark,
+              topOffset: hazardBannerTopOffset,
+              onDismiss: hazardCtrl.dismissProximityAlert,
+            ),
 
           // -------------------------------------------------------------------
           // 1. EXPLORE MODE OVERLAYS
@@ -589,16 +608,101 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  Widget _buildProximityHazardBanner({
+    required HazardModel nearbyHazard,
+    required bool isDark,
+    required double topOffset,
+    required VoidCallback onDismiss,
+  }) {
+    final alertBgColor = isDark ? const Color(0xFF1E1B18) : const Color(0xFFFFFBEB);
+    final alertBorderColor = isDark ? const Color(0xFFD97706) : const Color(0xFFF59E0B);
+    final alertTitleColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309);
+    final alertSubtitleColor = isDark ? Colors.white70 : const Color(0xFF92400E);
+
+    return Positioned(
+      top: topOffset,
+      left: 16,
+      right: 16,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: alertBgColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: alertBorderColor, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: alertBorderColor.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(nearbyHazard.icon, color: alertTitleColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'HAZARD ALERT: ${nearbyHazard.title.toUpperCase()}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: alertTitleColor,
+                        letterSpacing: 0.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Reported nearby • Proceed with caution',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: alertSubtitleColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: Icon(Symbols.close, size: 18, color: alertTitleColor),
+                onPressed: onDismiss,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showHazardReportSheet(BuildContext context, bool isDark) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
+        final hazardCtrl = context.read<HazardController>();
+        final locationCtrl = context.read<LocationController>();
+
         final hazards = [
-          {'title': 'Police Checkpoint', 'icon': Symbols.local_police, 'color': Colors.blue},
-          {'title': 'Heavy Traffic Congestion', 'icon': Symbols.traffic, 'color': Colors.amber},
-          {'title': 'Road Construction / Detour', 'icon': Symbols.construction, 'color': Colors.orange},
-          {'title': 'Accident / Vehicle Breakdown', 'icon': Symbols.car_crash, 'color': Colors.redAccent},
+          {'title': 'Police Checkpoint', 'type': 'police', 'icon': Symbols.local_police, 'color': Colors.blue},
+          {'title': 'Heavy Traffic Congestion', 'type': 'traffic', 'icon': Symbols.traffic, 'color': Colors.amber},
+          {'title': 'Road Construction / Detour', 'type': 'construction', 'icon': Symbols.construction, 'color': Colors.orange},
+          {'title': 'Accident / Vehicle Breakdown', 'type': 'accident', 'icon': Symbols.car_crash, 'color': Colors.redAccent},
         ];
 
         return Material(
@@ -630,14 +734,16 @@ class _MapScreenState extends State<MapScreen> {
                     title: Text(h['title'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     trailing: const Icon(Symbols.arrow_forward_ios, size: 14),
                     onTap: () {
-                      Navigator.of(ctx).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Reported "${h['title']}" to WayPoint corridor drivers!'),
-                          backgroundColor: AppTheme.primaryGreen,
-                          duration: const Duration(seconds: 2),
-                        ),
+                      hazardCtrl.reportHazard(
+                        title: h['title'] as String,
+                        type: h['type'] as String,
+                        icon: h['icon'] as IconData,
+                        color: h['color'] as Color,
+                        lat: locationCtrl.state.latitude,
+                        lng: locationCtrl.state.longitude,
                       );
+                      Navigator.of(ctx).pop();
+                      _showReportSuccessToast(context, h['title'] as String, isDark);
                     },
                   );
                 }),
@@ -646,6 +752,76 @@ class _MapScreenState extends State<MapScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showReportSuccessToast(BuildContext context, String hazardTitle, bool isDark) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        content: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark ? AppTheme.darkCard : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE6F7F0),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Symbols.check_circle, color: AppTheme.primaryGreen, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Report Broadcasted',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppTheme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      '"$hazardTitle" reported to corridor drivers.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.white60 : AppTheme.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        duration: const Duration(seconds: 3),
+      ),
     );
   }
 }
