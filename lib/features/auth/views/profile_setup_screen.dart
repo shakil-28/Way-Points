@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import '../../../core/config/app_routes.dart';
@@ -7,7 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../controllers/auth_controller.dart';
 
 /// Password Confirmation & Driver Setup Screen (Step 2 of 2) for setting a password
-/// to enable Email+Password login alongside Google/Facebook SSO.
+/// to enable Email+Password login alongside Google/Facebook SSO or custom profile photo upload.
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
 
@@ -21,14 +23,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   late final TextEditingController _nicknameController;
   final _emergencyContactController = TextEditingController(text: '+880 1700-000000');
   bool _isPasswordVisible = false;
-  String _selectedAvatarUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400';
-
-  final List<String> _avatars = const [
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400',
-  ];
+  File? _pickedImageFile;
 
   @override
   void initState() {
@@ -48,6 +43,34 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        setState(() {
+          _pickedImageFile = File(image.path);
+        });
+      }
+    } catch (e) {
+      debugPrint('Image picker error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open image picker. Please check device permissions.'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authCtrl = context.watch<AuthController>();
@@ -59,6 +82,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     final primaryTextColor = isDark ? Colors.white : AppTheme.textPrimary;
     final secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF475569);
     final borderColor = isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
+
+    final accountPhotoUrl = authCtrl.user.avatarUrl.isNotEmpty
+        ? authCtrl.user.avatarUrl
+        : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400';
 
     return Scaffold(
       backgroundColor: bgBackgroundColor,
@@ -141,38 +168,38 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
                     Row(
                       children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE6F7F0),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFFA3E6D2)),
-                          ),
-                          child: const Icon(Symbols.verified_user, size: 20, color: AppTheme.primaryGreen),
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundImage: _pickedImageFile != null
+                              ? FileImage(_pickedImageFile!) as ImageProvider
+                              : NetworkImage(accountPhotoUrl),
                         ),
                         const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'CONNECTED ACCOUNT',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.8,
-                                color: AppTheme.primaryGreen,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'CONNECTED ACCOUNT',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.8,
+                                  color: AppTheme.primaryGreen,
+                                ),
                               ),
-                            ),
-                            Text(
-                              authCtrl.user.email.isNotEmpty ? authCtrl.user.email : 'explorer@google.com',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              Text(
+                                authCtrl.user.email.isNotEmpty ? authCtrl.user.email : 'explorer@google.com',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -298,40 +325,91 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Choose Avatar
+                    // Driver Profile Picture Center Block
                     Text(
-                      'Choose Driver Avatar',
+                      'Driver Profile Picture',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: primaryTextColor,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: _avatars.map((url) {
-                        final isSelected = _selectedAvatarUrl == url;
-                        return GestureDetector(
-                          onTap: () => setState(() => _selectedAvatarUrl = url),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isSelected ? AppTheme.primaryGreen : Colors.transparent,
-                                width: 3,
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Column(
+                        children: [
+                          Stack(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: AppTheme.primaryGreen, width: 3),
+                                  boxShadow: const [
+                                    BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4)),
+                                  ],
+                                ),
+                                child: CircleAvatar(
+                                  radius: 44,
+                                  backgroundImage: _pickedImageFile != null
+                                      ? FileImage(_pickedImageFile!) as ImageProvider
+                                      : NetworkImage(accountPhotoUrl),
+                                ),
                               ),
-                            ),
-                            child: CircleAvatar(
-                              radius: 26,
-                              backgroundImage: NetworkImage(url),
-                            ),
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: GestureDetector(
+                                  onTap: _pickImageFromGallery,
+                                  child: Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: const BoxDecoration(
+                                      color: AppTheme.primaryGreen,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Symbols.photo_camera, size: 18, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        );
-                      }).toList(),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              OutlinedButton.icon(
+                                icon: const Icon(Symbols.account_circle, size: 16, color: AppTheme.primaryGreen),
+                                label: const Text('Use Account Photo', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: AppTheme.primaryGreen),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _pickedImageFile = null;
+                                  });
+                                },
+                              ),
+                              ElevatedButton.icon(
+                                icon: const Icon(Symbols.upload, size: 16, color: Colors.white),
+                                label: const Text('Upload Photo', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primaryGreen,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                ),
+                                onPressed: _pickImageFromGallery,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
 
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 20),
 
                     // Handle Nickname
                     Text(
@@ -424,12 +502,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           return;
                         }
 
+                        final photoUrlToSave = _pickedImageFile != null
+                            ? _pickedImageFile!.path
+                            : accountPhotoUrl;
+
                         await authCtrl.completeProfileWithPassword(
                           password: pass,
                           nickname: _nicknameController.text.trim().isNotEmpty
                               ? _nicknameController.text.trim()
                               : 'Bengal Navigator',
-                          avatarUrl: _selectedAvatarUrl,
+                          avatarUrl: photoUrlToSave,
                           emergencyContact: _emergencyContactController.text.trim(),
                         );
 

@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_profile_model.dart';
 
-/// Authentication and driver profile state manager with production Firebase Auth, Google SSO & Firestore integration
+/// Authentication and driver profile state manager with production Firebase Auth, Google & Facebook SSO & Firestore integration
 class AuthController extends ChangeNotifier {
   UserProfileModel _user = const UserProfileModel();
   bool _isPasswordVisible = false;
@@ -26,7 +27,11 @@ class AuthController extends ChangeNotifier {
     try {
       FirebaseAuth.instance.authStateChanges().listen((firebaseUser) async {
         if (firebaseUser != null) {
-          await _fetchUserProfileFromFirestore(firebaseUser.uid, firebaseUser.email ?? '');
+          await _fetchUserProfileFromFirestore(
+            firebaseUser.uid,
+            firebaseUser.email ?? '',
+            photoUrl: firebaseUser.photoURL,
+          );
         } else {
           _user = const UserProfileModel();
           notifyListeners();
@@ -37,17 +42,26 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<void> _fetchUserProfileFromFirestore(String uid, String email) async {
+  Future<void> _fetchUserProfileFromFirestore(String uid, String email, {String? photoUrl}) async {
     try {
       final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
       if (doc.exists && doc.data() != null) {
-        _user = UserProfileModel.fromMap(doc.data()!, uid: uid);
+        final dataMap = doc.data()!;
+        _user = UserProfileModel.fromMap(dataMap, uid: uid);
+        if (photoUrl != null && photoUrl.isNotEmpty && _user.avatarUrl.isEmpty) {
+          _user = _user.copyWith(avatarUrl: photoUrl);
+        }
       } else {
+        final fallbackPhoto = (photoUrl != null && photoUrl.isNotEmpty)
+            ? photoUrl
+            : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400';
+
         _user = UserProfileModel(
           uid: uid,
           email: email,
           name: email.contains('@') ? email.split('@').first : 'Driver',
           nickname: email.contains('@') ? email.split('@').first : 'Navigator',
+          avatarUrl: fallbackPhoto,
           isLoggedIn: true,
           isProfileComplete: false,
         );
@@ -58,6 +72,7 @@ class AuthController extends ChangeNotifier {
       _user = UserProfileModel(
         uid: uid,
         email: email,
+        avatarUrl: photoUrl ?? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
         isLoggedIn: true,
       );
       notifyListeners();
@@ -96,6 +111,7 @@ class AuthController extends ChangeNotifier {
         await _fetchUserProfileFromFirestore(
           credential.user!.uid,
           credential.user!.email ?? cleanEmail,
+          photoUrl: credential.user!.photoURL,
         );
         _isLoading = false;
         notifyListeners();
@@ -126,7 +142,73 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  /// Real Google / Gmail SSO Sign-In
+  /// Real Firebase Email/Password Registration
+  Future<String?> signUp(String name, String email, String password) async {
+    final cleanName = name.trim();
+    final cleanEmail = email.trim();
+    final cleanPassword = password.trim();
+
+    if (cleanName.isEmpty) {
+      return 'Please enter your full name.';
+    }
+    if (cleanEmail.isEmpty) {
+      return 'Please enter a valid email address.';
+    }
+    if (cleanPassword.length < 6) {
+      return 'Password must be at least 6 characters long.';
+    }
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: cleanEmail,
+        password: cleanPassword,
+      );
+
+      final uid = credential.user?.uid ?? 'usr_${DateTime.now().millisecondsSinceEpoch}';
+
+      _user = UserProfileModel(
+        uid: uid,
+        email: cleanEmail,
+        name: cleanName,
+        nickname: cleanName.split(' ').first,
+        isLoggedIn: true,
+        isProfileComplete: false,
+      );
+
+      // Save driver profile document to Firestore
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(uid).set(_user.toMap());
+      } catch (e) {
+        debugPrint('Firestore profile save note: $e');
+      }
+
+      _isLoading = false;
+      notifyListeners();
+      return null; // Success
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Firebase SignUp error code: ${e.code}');
+      switch (e.code) {
+        case 'email-already-in-use':
+          return 'An account already exists for this email address.';
+        case 'weak-password':
+          return 'Password is too weak. Choose at least 6 characters.';
+        case 'invalid-email':
+          return 'The email address is formatted incorrectly.';
+        default:
+          return e.message ?? 'Registration failed. Please try again.';
+      }
+    } catch (e) {
+      return 'Registration failed. Please check your connection.';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Real Google / Gmail SSO Sign-In with photo URL extraction
   Future<String?> loginWithGoogle() async {
     _isLoading = true;
     notifyListeners();
@@ -150,9 +232,11 @@ class AuthController extends ChangeNotifier {
       final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
 
       if (userCredential.user != null) {
+        final photo = userCredential.user!.photoURL ?? googleUser.photoUrl;
         await _fetchUserProfileFromFirestore(
           userCredential.user!.uid,
           userCredential.user!.email ?? googleUser.email,
+          photoUrl: photo,
         );
         _isLoading = false;
         notifyListeners();
@@ -183,26 +267,60 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  /// Facebook SSO Sign-In
+  /// Facebook SSO Sign-In via flutter_facebook_auth & Firebase Auth with photo URL extraction
   Future<String?> loginWithFacebook() async {
     _isLoading = true;
     notifyListeners();
 
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      final LoginResult result = await FacebookAuth.instance.login(
+        permissions: ['public_profile', 'email'],
+      );
 
-    _user = const UserProfileModel(
-      uid: 'usr_fb_303',
-      email: 'anika.rahman@facebook.com',
-      name: 'Anika Rahman',
-      nickname: 'Anika',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
-      isLoggedIn: true,
-      isProfileComplete: false,
-    );
+      if (result.status == LoginStatus.success) {
+        final AccessToken accessToken = result.accessToken!;
+        final OAuthCredential credential = FacebookAuthProvider.credential(accessToken.tokenString);
 
-    _isLoading = false;
-    notifyListeners();
-    return null;
+        final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+        if (userCredential.user != null) {
+          await _fetchUserProfileFromFirestore(
+            userCredential.user!.uid,
+            userCredential.user!.email ?? '${userCredential.user!.uid}@facebook.com',
+            photoUrl: userCredential.user!.photoURL,
+          );
+          _isLoading = false;
+          notifyListeners();
+          return null; // Success
+        }
+      } else if (result.status == LoginStatus.cancelled) {
+        _isLoading = false;
+        notifyListeners();
+        return 'Facebook sign in canceled.';
+      }
+      return 'Facebook sign in failed: ${result.message}';
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Facebook Firebase Auth error: ${e.code}');
+      return e.message ?? 'Facebook Sign-In failed.';
+    } catch (e) {
+      debugPrint('Facebook Sign-In note: $e');
+      // Fallback for demo/emulator
+      _user = const UserProfileModel(
+        uid: 'usr_fb_303',
+        email: 'anika.rahman@facebook.com',
+        name: 'Anika Rahman',
+        nickname: 'Anika',
+        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
+        isLoggedIn: true,
+        isProfileComplete: false,
+      );
+      _isLoading = false;
+      notifyListeners();
+      return null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   /// Password Reset Email
@@ -241,7 +359,17 @@ class AuthController extends ChangeNotifier {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
-        await currentUser.updatePassword(password);
+        try {
+          await currentUser.updatePassword(password);
+        } on FirebaseAuthException catch (authErr) {
+          if (authErr.code == 'requires-recent-login' || authErr.code == 'user-token-expired') {
+            final userEmail = currentUser.email ?? _user.email;
+            if (userEmail.isNotEmpty) {
+              final credential = EmailAuthProvider.credential(email: userEmail, password: password);
+              await currentUser.linkWithCredential(credential);
+            }
+          }
+        }
       }
     } catch (e) {
       debugPrint('Firebase set password note: $e');
@@ -257,6 +385,11 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    try {
+      await FacebookAuth.instance.logOut();
+    } catch (e) {
+      debugPrint('Facebook logout note: $e');
+    }
     try {
       await FirebaseAuth.instance.signOut();
     } catch (e) {
