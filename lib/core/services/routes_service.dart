@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import '../../core/config/app_config.dart';
 
@@ -7,6 +9,19 @@ import '../../core/config/app_config.dart';
 class RoutesService {
   static const String _baseUrl = 'https://maps.googleapis.com/maps/api';
   static final String _apiKey = AppConfig.googleMapsApiKey;
+
+  /// Decodes Google Directions API overview_polyline points into LatLng list for Google Maps rendering
+  static List<LatLng> decodePolylinePoints(String encodedPolyline) {
+    if (encodedPolyline.isEmpty) return [];
+    try {
+      PolylinePoints polylinePoints = PolylinePoints();
+      List<PointLatLng> result = polylinePoints.decodePolyline(encodedPolyline);
+      return result.map((p) => LatLng(p.latitude, p.longitude)).toList();
+    } catch (e) {
+      debugPrint('Error decoding polyline: $e');
+      return [];
+    }
+  }
 
   /// Get directions between two points
   static Future<Map<String, dynamic>?> getDirections({
@@ -66,6 +81,7 @@ class RoutesService {
             'durationInTraffic': legs.first['duration_in_traffic']?['text'],
             'startAddress': legs.first['start_address'] ?? '',
             'endAddress': legs.first['end_address'] ?? '',
+            'polyline': overviewPolyline ?? '',
             'path': path,
             'bounds': route['bounds'],
             'summary': route['summary'] ?? '',

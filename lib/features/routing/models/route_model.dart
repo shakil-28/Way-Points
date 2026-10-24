@@ -1,3 +1,5 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 /// Model representing a navigation route option with toll, fuel, congestion, and scenic scores
 class RouteModel {
   final String id;
@@ -11,6 +13,8 @@ class RouteModel {
   final bool isScenic;
   final double estimatedTollBdt;
   final double fuelCostBdt;
+  final String polyline;
+  final List<LatLng> polylinePoints;
 
   const RouteModel({
     required this.id,
@@ -24,5 +28,7 @@ class RouteModel {
     this.isScenic = false,
     this.estimatedTollBdt = 120.0,
     this.fuelCostBdt = 680.0,
+    this.polyline = '',
+    this.polylinePoints = const [],
   });
 }

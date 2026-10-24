@@ -8,7 +8,7 @@ import '../../../core/widgets/waypoint_logo.dart';
 import '../controllers/auth_controller.dart';
 
 /// Driver Sign-In Console with production Google/Facebook SSO options directing new sign-ins
-/// to Password Confirmation & Driver Profile Setup.
+/// to Password Confirmation & Driver Profile Setup, or returning drivers directly to the map.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -214,7 +214,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             : () async {
                                 final errorMessage = await authCtrl.loginWithGoogle();
                                 if (errorMessage == null && context.mounted) {
-                                  context.go(AppRoutes.profileSetup);
+                                  if (authCtrl.user.isProfileComplete) {
+                                    context.go(AppRoutes.map);
+                                  } else {
+                                    context.go(AppRoutes.profileSetup);
+                                  }
                                 } else if (errorMessage != null && errorMessage != 'Google sign in canceled.' && context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -266,7 +270,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             : () async {
                                 final errorMessage = await authCtrl.loginWithFacebook();
                                 if (errorMessage == null && context.mounted) {
-                                  context.go(AppRoutes.profileSetup);
+                                  if (authCtrl.user.isProfileComplete) {
+                                    context.go(AppRoutes.map);
+                                  } else {
+                                    context.go(AppRoutes.profileSetup);
+                                  }
                                 } else if (errorMessage != null && context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(

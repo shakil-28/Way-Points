@@ -2,14 +2,16 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import '../../../core/services/routes_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../features/hazards/controllers/hazard_controller.dart';
 import '../../../features/location/controllers/location_controller.dart';
+import '../../../features/routing/controllers/routing_controller.dart';
 
 import '../controllers/map_controller.dart';
 import '../models/map_state_model.dart';
 
-/// Displays a real Google Map synchronized with live camera auto-follow, GPS marker, & hazard overlays
+/// Displays a real Google Map synchronized with live camera auto-follow, GPS marker, hazard overlays, & interactive decoded route polylines
 class MapView extends StatefulWidget {
   final MapController? controller;
   final ValueChanged<String>? onMarkerTap;
@@ -280,6 +282,7 @@ class _MapViewState extends State<MapView> {
     final mapController =
         widget.controller ?? context.watch<MapController>();
     final hazardController = context.watch<HazardController>();
+    final routingController = context.watch<RoutingController>();
 
     final hazardMarkers = hazardController.hazards.map((h) {
       return Marker(
@@ -298,6 +301,32 @@ class _MapViewState extends State<MapView> {
     }).toSet();
 
     final allMapMarkers = {..._markers, ...hazardMarkers};
+
+    // Decode active primary route and alternative routes from RoutingController
+    final Set<Polyline> polylines = {};
+
+    for (final route in routingController.routes) {
+      final isSelected = route.id == routingController.selectedRoute.id;
+      final points = route.polylinePoints.isNotEmpty
+          ? route.polylinePoints
+          : (route.polyline.isNotEmpty ? RoutesService.decodePolylinePoints(route.polyline) : <LatLng>[]);
+
+      if (points.isNotEmpty) {
+        polylines.add(
+          Polyline(
+            polylineId: PolylineId('route_${route.id}'),
+            points: points,
+            color: isSelected ? AppTheme.primaryGreen : Colors.blueGrey.withValues(alpha: 0.45),
+            width: isSelected ? 6 : 4,
+            jointType: JointType.round,
+            startCap: Cap.roundCap,
+            endCap: Cap.roundCap,
+            consumeTapEvents: !isSelected,
+            onTap: !isSelected ? () => routingController.selectRoute(route) : null,
+          ),
+        );
+      }
+    }
 
     return AnimatedBuilder(
       animation: mapController,
@@ -322,6 +351,7 @@ class _MapViewState extends State<MapView> {
           myLocationButtonEnabled: false,
           
           markers: allMapMarkers,
+          polylines: polylines,
 
           compassEnabled: true,
           zoomControlsEnabled: false,

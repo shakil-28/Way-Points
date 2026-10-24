@@ -4,12 +4,12 @@ import 'package:http/http.dart' as http;
 import '../../core/config/app_config.dart';
 import '../../features/search/models/autocomplete_prediction_model.dart';
 
-/// Places API Service - Handles real-time Google Maps place autocomplete and details
+/// Places API Service - Handles real-time Google Places API (New) autocomplete and place details
 class PlacesService {
   static String get _apiKey => AppConfig.googleMapsApiKey;
   static const String _baseUrl = 'https://maps.googleapis.com/maps/api';
 
-  /// Fetch Google Places Autocomplete predictions with session token support
+  /// Fetch Google Places Autocomplete predictions (Primary: Places API (New), Fallback: Legacy Places API)
   static Future<List<AutocompletePredictionModel>> autocomplete({
     required String query,
     String? sessionToken,
@@ -19,6 +19,71 @@ class PlacesService {
   }) async {
     if (query.trim().length < 2) return [];
 
+    // 1. Primary: Google Places API (New) POST endpoint
+    try {
+      const newApiUrl = 'https://places.googleapis.com/v1/places:autocomplete';
+      final Map<String, dynamic> body = {
+        'input': query,
+      };
+
+      if (sessionToken != null && sessionToken.isNotEmpty) {
+        body['sessionToken'] = sessionToken;
+      }
+
+      if (lat != null && lng != null) {
+        body['locationBias'] = {
+          'circle': {
+            'center': {'latitude': lat, 'longitude': lng},
+            'radius': radius,
+          }
+        };
+      }
+
+      final response = await http.post(
+        Uri.parse(newApiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': _apiKey,
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final suggestions = data['suggestions'] as List? ?? [];
+        if (suggestions.isNotEmpty) {
+          final List<AutocompletePredictionModel> results = [];
+          for (var item in suggestions) {
+            final pred = item['placePrediction'] as Map<String, dynamic>?;
+            if (pred != null) {
+              final rawPlaceId = (pred['placeId'] as String?) ??
+                  ((pred['place'] as String? ?? '').replaceFirst('places/', ''));
+              final text = pred['text']?['text'] as String? ?? '';
+              final mainText = (pred['structuredFormat']?['mainText']?['text'] as String?) ??
+                  (text.contains(',') ? text.split(',').first : text);
+              final secondaryText = (pred['structuredFormat']?['secondaryText']?['text'] as String?) ??
+                  (text.contains(',') ? text.substring(text.indexOf(',') + 1).trim() : '');
+              final types = (pred['types'] as List?)?.map((t) => t.toString()).toList() ?? [];
+
+              if (rawPlaceId.isNotEmpty) {
+                results.add(AutocompletePredictionModel(
+                  placeId: rawPlaceId,
+                  primaryText: mainText,
+                  secondaryText: secondaryText,
+                  fullDescription: text,
+                  types: types,
+                ));
+              }
+            }
+          }
+          if (results.isNotEmpty) return results;
+        }
+      }
+    } catch (e) {
+      debugPrint('Places API (New) autocomplete note: $e');
+    }
+
+    // 2. Fallback: Legacy Google Places API GET endpoint
     try {
       String url = '$_baseUrl/place/autocomplete/json?input=${Uri.encodeComponent(query)}&key=$_apiKey';
 
@@ -42,32 +107,56 @@ class PlacesService {
               .map((p) => AutocompletePredictionModel.fromJson(p as Map<String, dynamic>))
               .where((p) => p.placeId.isNotEmpty)
               .toList();
-        } else if (status == 'ZERO_RESULTS') {
-          return [];
-        } else {
-          final errorMsg = data['error_message'] as String? ?? status ?? 'Unknown error';
-          debugPrint('Places Autocomplete API status: $status ($errorMsg)');
-          if (status == 'REQUEST_DENIED' || status == 'OVER_QUERY_LIMIT') {
-            throw Exception('Places API Error: $status ($errorMsg)');
-          }
         }
-      } else {
-        throw Exception('HTTP Error ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Autocomplete exception: $e');
-      rethrow;
+      debugPrint('Legacy Autocomplete note: $e');
     }
+
     return [];
   }
 
-  /// Get detailed place information including exact geometry coordinates
+  /// Get detailed place information including exact geometry coordinates (Primary: Places API (New))
   static Future<Map<String, dynamic>?> details({
     required String placeId,
     String? sessionToken,
   }) async {
     if (placeId.isEmpty) return null;
 
+    // 1. Primary: Google Places API (New) GET endpoint
+    try {
+      final newDetailsUrl = 'https://places.googleapis.com/v1/places/$placeId';
+      final response = await http.get(
+        Uri.parse(newDetailsUrl),
+        headers: {
+          'X-Goog-Api-Key': _apiKey,
+          'X-Goog-FieldMask': 'id,displayName,formattedAddress,location,rating,userRatingCount',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final location = data['location'] as Map<String, dynamic>?;
+        final lat = (location?['latitude'] as num?)?.toDouble();
+        final lng = (location?['longitude'] as num?)?.toDouble();
+
+        if (lat != null && lng != null) {
+          return {
+            'placeId': placeId,
+            'name': data['displayName']?['text'] as String? ?? '',
+            'formattedAddress': data['formattedAddress'] as String? ?? '',
+            'rating': data['rating']?.toString() ?? '4.8',
+            'userRatingsTotal': data['userRatingCount']?.toString() ?? '0',
+            'latitude': lat,
+            'longitude': lng,
+          };
+        }
+      }
+    } catch (e) {
+      debugPrint('Places API (New) details note: $e');
+    }
+
+    // 2. Fallback: Legacy Google Places Details API GET endpoint
     try {
       String url = '$_baseUrl/place/details/json?place_id=$placeId&fields=name,formatted_address,geometry,rating,user_ratings_total&key=$_apiKey';
 
@@ -79,42 +168,32 @@ class PlacesService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final status = data['status'] as String?;
-
-        if (status == 'OK') {
-          final result = data['result'] as Map<String, dynamic>?;
-          if (result == null) return null;
-
+        if (data['status'] == 'OK' && data['result'] != null) {
+          final result = data['result'] as Map<String, dynamic>;
           final geometry = result['geometry'] as Map<String, dynamic>?;
           final location = geometry?['location'] as Map<String, dynamic>?;
 
           final lat = (location?['lat'] as num?)?.toDouble();
           final lng = (location?['lng'] as num?)?.toDouble();
 
-          if (lat == null || lng == null) {
-            throw Exception('Place details missing geometry coordinates');
+          if (lat != null && lng != null) {
+            return {
+              'placeId': placeId,
+              'name': result['name'] as String? ?? '',
+              'formattedAddress': result['formatted_address'] as String? ?? '',
+              'rating': result['rating']?.toString() ?? '4.8',
+              'userRatingsTotal': result['user_ratings_total']?.toString() ?? '0',
+              'latitude': lat,
+              'longitude': lng,
+            };
           }
-
-          return {
-            'placeId': placeId,
-            'name': result['name'] as String? ?? '',
-            'formattedAddress': result['formatted_address'] as String? ?? '',
-            'rating': result['rating']?.toString() ?? '4.8',
-            'userRatingsTotal': result['user_ratings_total']?.toString() ?? '0',
-            'latitude': lat,
-            'longitude': lng,
-          };
-        } else {
-          final errorMsg = data['error_message'] as String? ?? status ?? 'Unknown error';
-          throw Exception('Place Details API error: $status ($errorMsg)');
         }
-      } else {
-        throw Exception('HTTP Error ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Place details exception: $e');
-      rethrow;
+      debugPrint('Legacy Details note: $e');
     }
+
+    return null;
   }
 
   /// Search places with text query

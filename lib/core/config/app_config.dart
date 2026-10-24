@@ -9,12 +9,13 @@ class AppConfig {
   static const double defaultLongitude = 90.4125;
   static const double defaultZoom = 13.5;
 
-  /// Parameterized Google Maps API key passed via compile-time --dart-define=MAPS_API_KEY=YOUR_KEY
+  static const String _activeApiKey = 'AIzaSyCnPh6dFHh8Pn4obz3pTEQhVES8bUKd-uo';
+
+  /// Dynamically returns the Google Maps API key passed via --dart-define=MAPS_API_KEY=YOUR_KEY or default active key
   static String get googleMapsApiKey {
-    return const String.fromEnvironment(
-      'MAPS_API_KEY',
-      defaultValue: 'YOUR_MAPS_API_KEY',
-    );
+    const envKey = String.fromEnvironment('MAPS_API_KEY');
+    if (envKey.isNotEmpty && envKey != 'YOUR_MAPS_API_KEY') return envKey;
+    return _activeApiKey;
   }
 
   static const double defaultSpeedKmh = 0.0;

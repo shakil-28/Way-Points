@@ -80,6 +80,8 @@ class RoutingController extends ChangeNotifier {
         final distMeters = (directions['distanceMeters'] as int?) ?? 0;
         final durationSecs = (directions['durationSeconds'] as int?) ?? 0;
         final summary = (directions['summary'] as String?) ?? '';
+        final polylineStr = (directions['polyline'] as String?) ?? '';
+        final decodedPoints = RoutesService.decodePolylinePoints(polylineStr);
 
         final liveRoute = RouteModel(
           id: 'route_live_${DateTime.now().millisecondsSinceEpoch}',
@@ -93,6 +95,8 @@ class RoutingController extends ChangeNotifier {
           isScenic: false,
           estimatedTollBdt: 250.0,
           fuelCostBdt: ((distMeters / 1000.0) * 7.5).roundToDouble(),
+          polyline: polylineStr,
+          polylinePoints: decodedPoints,
         );
 
         _routes = [liveRoute, ...predefinedRoutes];
